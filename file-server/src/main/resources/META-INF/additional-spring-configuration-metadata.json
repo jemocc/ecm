@@ -1,0 +1,8 @@
+{
+  "properties": [
+    {
+      "name": "self-config",
+      "type": "java.lang.String",
+      "description": "自定义配置目录."
+    }
+  ] }

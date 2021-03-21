@@ -1,0 +1,26 @@
+server:
+  port: 9322
+spring:
+  application:
+    name: gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 47.108.61.234:8848
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: ua
+          uri: lb://ua
+          order: 0
+          predicates:
+            - Path=/ua/**
+        - id: file-server
+          uri: lb://file-server
+          order: 1
+          predicates:
+            - Path=/file-server/**
+
+

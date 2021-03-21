@@ -1,0 +1,22 @@
+server:
+  port: 9324
+spring:
+  application:
+    name: file-server
+  profiles:
+    active: dev
+  datasource:
+    hikari:
+      max-lifetime: 30000
+  main:
+    allow-bean-definition-overriding: true
+dubbo:
+  protocol:
+    name: dubbo
+    port: -1
+  registry:
+    address: spring-cloud://localhost
+  cloud:
+    subscribed-services: ua
+self-config:
+#  open-verify-code-check: true

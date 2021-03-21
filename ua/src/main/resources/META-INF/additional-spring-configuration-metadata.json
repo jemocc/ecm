@@ -1,0 +1,14 @@
+{
+  "properties": [
+    {
+      "name": "self-config",
+      "type": "java.lang.String",
+      "description": "自定义配置目录."
+    },
+    {
+      "name": "self-config.open-verify-code-check",
+      "type": "java.lang.String",
+      "description": "是否开启登录流程中的图形验证码校验."
+    }
+
+  ] }
