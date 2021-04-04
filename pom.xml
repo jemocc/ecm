@@ -23,7 +23,6 @@
         <swagger.version>1.5.16</swagger.version>
         <spring.cloud.version>Hoxton.SR9</spring.cloud.version>
         <spring.cloud.alibaba.dependencies.version>2.2.3.RELEASE</spring.cloud.alibaba.dependencies.version>
-        <com.alibaba.fastjson.version>1.2.70</com.alibaba.fastjson.version>
         <org.projectlombok.lombok.version>1.18.16</org.projectlombok.lombok.version>
         <spring.security.oauth2.version>2.3.5.RELEASE</spring.security.oauth2.version>
     </properties>
@@ -108,11 +107,6 @@
             <scope>runtime</scope>
         </dependency>
 
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>fastjson</artifactId>
-            <version>${com.alibaba.fastjson.version}</version>
-        </dependency>
         <dependency>
             <groupId>io.swagger</groupId>
             <artifactId>swagger-annotations</artifactId>
