@@ -18,7 +18,7 @@ public class UserCtrl {
     public RspResult<User> getCurrentUser() {
         SecurityContext context = SecurityContextHolder.getContext();
         Authentication authentication = context.getAuthentication();
-        User user = JsonUtil.transfer(authentication.getPrincipal(), User.class);
+        User user = (User) authentication.getPrincipal();
         user.setPassword(null);
         return RspResult.ok(user);
     }

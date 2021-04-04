@@ -1,23 +1,46 @@
 package org.cc.common.utils;
 
-import com.google.gson.Gson;
+import com.google.gson.*;
 
+import java.lang.reflect.Type;
+import java.util.Arrays;
+import java.util.List;
+
+/**
+ * @ClassName: JsonUtil
+ * @Description: TODO
+ * @Author: CC
+ * @Date 2021/4/2 10:30
+ * @ModifyRecords: v1.0 new
+ */
 public class JsonUtil {
+    private static final Gson g1 = new Gson();
+    private static final Gson g2 = new GsonBuilder().serializeNulls().create();
 
-    private static class In {
-        private static final Gson gson = new Gson();
+    //new TypeToken<Map<String, Object>>(){}.getType()
+    public static <T> T json2Bean(String jsonStr, Type type) {
+        return g2.fromJson(jsonStr, type);
     }
 
-    public static String toJSONStr(Object obj) {
-        return In.gson.toJson(obj);
+    public static String bean2Json(Object bean) {
+        return g2.toJson(bean);
     }
 
-    public static <T> T fromJSON(String str, Class<T> c) {
-        return In.gson.fromJson(str, c);
+    public static <T> List<T> json2List(String jsonStr, Type type) {
+        return Arrays.asList(g2.fromJson(jsonStr, type));
     }
 
-    public static <T> T transfer(Object obj, Class<T> c){
-        String t =  toJSONStr(obj);
-        return fromJSON(t, c);
+    public static <T> T json2Bean_FN(String jsonStr, Type type) {
+        return g1.fromJson(jsonStr, type);
     }
+
+    public static String bean2Json_FN(Object bean) {
+        return g1.toJson(bean);
+    }
+
+    public static <T> List<T> json2List_FN(String jsonStr, Type type) {
+        return Arrays.asList(g1.fromJson(jsonStr, type));
+    }
+
+
 }
