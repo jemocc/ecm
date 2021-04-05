@@ -1,6 +1,7 @@
 package org.cc.ua.utils;
 
 import javax.imageio.ImageIO;
+import javax.servlet.http.HttpSession;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
@@ -41,8 +42,9 @@ public class VerifyCodeUtil {
      * @return  验证码
      * @throws IOException 输出验证码失败
      */
-    public static String outputVerifyImage(int w, int h, OutputStream os, int verifySize) throws IOException{
+    public static String outputVerifyImage(int w, int h, OutputStream os, int verifySize, HttpSession session) throws IOException{
         String verifyCode = generateVerifyCode(verifySize, null);
+        session.setAttribute("verifyCode", verifyCode);
         outputImage(w, h, os, verifyCode);
         return verifyCode;
     }
