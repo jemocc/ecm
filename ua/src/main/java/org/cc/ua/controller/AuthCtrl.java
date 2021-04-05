@@ -2,20 +2,12 @@ package org.cc.ua.controller;
 
 import com.alibaba.fastjson.JSONObject;
 import org.cc.common.model.RspResult;
-import org.cc.ua.utils.VerifyCodeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 
 @RestController
 public class AuthCtrl {
@@ -30,15 +22,6 @@ public class AuthCtrl {
         JSONObject result = new JSONObject(1);
         result.put("code", code);
         return RspResult.ok(result);
-    }
-
-    @GetMapping(value = "/verify-code-img.jpg")
-    public void getVerifyCodeImg(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        response.setContentType("image/jpeg");
-        ServletOutputStream sos = response.getOutputStream();
-        String verifyCode = VerifyCodeUtil.outputVerifyImage(150,  50, sos, 4);
-        request.getSession().setAttribute("verifyCode", verifyCode);
-        log.info("Generate verify code: {}", verifyCode);
     }
 
     @GetMapping(value = "/pr/password-encoder")

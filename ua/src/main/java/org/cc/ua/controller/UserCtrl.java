@@ -12,8 +12,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.nio.charset.Charset;
-
 @RestController
 @RequestMapping("/api")
 public class UserCtrl {
@@ -25,7 +23,7 @@ public class UserCtrl {
         Authentication authentication = context.getAuthentication();
         User user = (User) authentication.getPrincipal();
         user.setPassword(null);
-        log.info("服务器编码：{}, 用户：{}", Charset.defaultCharset(), JsonUtil.bean2Json(user));
+        log.info("用户：{}", JsonUtil.bean2Json(user));
         return RspResult.ok(user);
     }
 
