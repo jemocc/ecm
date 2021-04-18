@@ -2,9 +2,11 @@ package org.cc.fileserver.entity;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import org.cc.common.config.ExecutorConfig;
 import org.cc.fileserver.entity.enums.FileFormType;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @ApiModel(value = "视频", description = "视频映射实体")
 public class Video {
@@ -24,6 +26,15 @@ public class Video {
     @ApiModelProperty("视频封面")
     private String vCover;
 
+    @ApiModelProperty("时常")
+    private LocalTime totalTime;
+
+    @ApiModelProperty("分组")
+    private Integer groupId;
+
+    @ApiModelProperty("组内序号")
+    private Integer groupSort;
+
     @ApiModelProperty("创建时间")
     private LocalDateTime createAt;
 
@@ -38,7 +49,7 @@ public class Video {
 
     public static Video ofNew(String name, String type, String vfUri, String vCover, FileFormType formType) {
         Video v = new Video();
-        v.setCreateAt(LocalDateTime.now());
+        v.createAt = LocalDateTime.now();
         v.name = name;
         v.type = type;
         v.vfUri = vfUri;
@@ -46,6 +57,8 @@ public class Video {
         v.formType = formType;
         return v;
     }
+
+    public void beginDown() { }
 
     public Integer getVid() {
         return vid;
@@ -85,6 +98,30 @@ public class Video {
 
     public void setvCover(String vCover) {
         this.vCover = vCover;
+    }
+
+    public LocalTime getTotalTime() {
+        return totalTime;
+    }
+
+    public void setTotalTime(LocalTime totalTime) {
+        this.totalTime = totalTime;
+    }
+
+    public Integer getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(Integer groupId) {
+        this.groupId = groupId;
+    }
+
+    public Integer getGroupSort() {
+        return groupSort;
+    }
+
+    public void setGroupSort(Integer groupSort) {
+        this.groupSort = groupSort;
     }
 
     public LocalDateTime getCreateAt() {
@@ -127,6 +164,9 @@ public class Video {
                 ", type='" + type + '\'' +
                 ", vfUri='" + vfUri + '\'' +
                 ", vCover='" + vCover + '\'' +
+                ", totalTime=" + totalTime +
+                ", groupId=" + groupId +
+                ", groupSort=" + groupSort +
                 ", createAt=" + createAt +
                 ", formType=" + formType +
                 ", remark1='" + remark1 + '\'' +
