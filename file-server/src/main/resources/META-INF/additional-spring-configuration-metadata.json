@@ -4,5 +4,10 @@
       "name": "self-config",
       "type": "java.lang.String",
       "description": "自定义配置目录."
+    },
+    {
+      "name": "self-config.local-file-path",
+      "type": "java.lang.String",
+      "description": "本地文件存储位置."
     }
   ] }
