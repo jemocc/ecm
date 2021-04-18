@@ -1,17 +1,7 @@
 package org.cc.common.config;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
-/**
- * @ClassName: ExecutorConfig
- * @Description: TODO
- * @Author: CC
- * @Date 2021/4/18 11:05
- * @ModifyRecords: v1.0 new
- */
 public class ExecutorConfig {
 
 //    static final class Inner {
@@ -24,7 +14,19 @@ public class ExecutorConfig {
 //    }
 
     public static ExecutorService getNewExecutor () {
-        return new ThreadPoolExecutor(5, 200, 2, TimeUnit.SECONDS,
-                new SynchronousQueue<>(), new ThreadPoolExecutor.CallerRunsPolicy());
+        return new ThreadPoolExecutor(5, 200, 5, TimeUnit.SECONDS,
+                new SynchronousQueue<>(), new BlockingRejectedExecutionHandler());
+    }
+}
+class BlockingRejectedExecutionHandler implements RejectedExecutionHandler {
+    @Override
+    public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+        if (!executor.isShutdown()) {
+            try {
+                executor.getQueue().put(r);
+            } catch (InterruptedException e) {
+                executor.execute(r);
+            }
+        }
     }
 }

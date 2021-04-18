@@ -7,7 +7,6 @@ import org.cc.common.utils.DateTimeUtil;
 import org.cc.fileserver.entity.enums.FileFormType;
 import org.cc.fileserver.utils.HttpFileUtil;
 import org.cc.fileserver.utils.M3U8Util;
-import org.springframework.ui.context.Theme;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -29,13 +28,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * @ClassName: M3U8Video
- * @Description: TODO
- * @Author: CC
- * @Date 2021/4/18 10:02
- * @ModifyRecords: v1.0 new
- */
 @ApiModel(value = "M3U8视频", description = "视频映射实体")
 public class M3U8Video extends Video {
 
@@ -52,7 +44,9 @@ public class M3U8Video extends Video {
     Cipher cipher;
 
     ExecutorService es = ExecutorConfig.getNewExecutor();
+
     boolean cancelFlag = false;
+    CountDownLatch over = new CountDownLatch(1);
 
     public static Video ofNew(String name, String type, String vfUri, String vCover, FileFormType formType, String localAddr) {
         M3U8Video v = new M3U8Video();
@@ -70,6 +64,14 @@ public class M3U8Video extends Video {
     public void beginDown() {
         M3u8DownTask task = new M3u8DownTask(remoteAddr, this);
         es.submit(task);
+        try {
+            over.await();
+            es.shutdown();
+            System.out.println("线程池关闭");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
     }
 }
 class M3u8DownTask implements Runnable {
@@ -83,7 +85,7 @@ class M3u8DownTask implements Runnable {
 
     @Override
     public void run() {
-        HttpURLConnection conn = HttpFileUtil.doGet(url, 0);
+        HttpURLConnection conn = HttpFileUtil.doGetForConn(url, 0, 20);
         String domain = HttpFileUtil.getDomain(conn);
         List<String> data = M3U8Util.readM3U8FileData(conn);
         conn.disconnect();
@@ -112,8 +114,11 @@ class M3u8DownTask implements Runnable {
             System.out.println("total part: " + video.tss.size());
             video.setTotalTime(DateTimeUtil.parseTime(totalTime.intValue()));
             video.cdl = new CountDownLatch(video.tss.size());
+            Watch watch = new Watch(video);
+            video.es.submit(watch);
+
             for (int i = 0; i < video.tss.size(); i++) {
-                M3u8DownPartTask task = new M3u8DownPartTask(i, domain + video.tss.get(i), video, 0);
+                M3u8DownPartTask task = new M3u8DownPartTask(i, domain + video.tss.get(i), video);
                 video.es.submit(task);
             }
             System.out.println("任务提交完成");
@@ -131,18 +136,16 @@ class M3u8DownTask implements Runnable {
                     try {
                         if (video.cipher != null)
                             v=video.cipher.doFinal(v);
-                        System.out.println("write part_" + k + ": " + v.length);
                         bos.write(v);
                     } catch (IOException | IllegalBlockSizeException | BadPaddingException e) {
                         e.printStackTrace();
                     }
                 });
                 System.out.println("文件[" + video.localAddr + "]下载完成, " + video.toString());
+                video.over.countDown();
             } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
                 HttpFileUtil.deleteFile(f);
-            } finally {
-                video.es.shutdown();
             }
         }
     }
@@ -151,44 +154,25 @@ class M3u8DownPartTask implements Runnable {
     private final int seqNo;
     private final String url;
     private final M3U8Video video;
-    private final int retry;
 
-    public M3u8DownPartTask(int seqNo, String url, M3U8Video video, int retry) {
+    public M3u8DownPartTask(int seqNo, String url, M3U8Video video) {
         this.seqNo = seqNo;
         this.url = url;
         this.video = video;
-        this.retry = retry;
     }
 
     @Override
     public void run() {
-        char p = '.';
-        String eMsg = null;
         try {
-            if (video.cancelFlag) {
-                p = '-';
-            } else {
-                HttpURLConnection conn = HttpFileUtil.doGet(url, 0);
-                byte[] data = HttpFileUtil.readData(conn);
+            if (!video.cancelFlag) {
+                byte[] data = HttpFileUtil.doGet(url, 0, 20);
                 video.dataMap.put(seqNo, data);
             }
-            video.cdl.countDown();
-        } catch (IOException e) {
-            if (retry < 10) {
-                video.es.submit(new M3u8DownPartTask(seqNo, url, video, retry + 1));
-            } else {
-                video.cdl.countDown();
-                p = 'e';
-                video.cancelFlag = true;
-                eMsg = e.getMessage();
-            }
+        } catch (Exception e) {
+            video.cancelFlag = true;
+            System.out.println("\n片段[" + seqNo + "]读取失败 [" + e.getMessage() + "], remain:" + video.cdl.getCount());
         } finally {
-//            if (video.cdl.getCount() % 200 == 0)
-//                System.out.println(p);
-//            else
-//                System.out.print(p);
-            if ('e' == p)
-                System.out.println("\n片段[" + seqNo + "]读取失败 [" + eMsg + "], remain:" + video.cdl.getCount());
+            video.cdl.countDown();
         }
     }
 }
@@ -204,7 +188,7 @@ class Watch implements Runnable {
         ThreadPoolExecutor executor = (ThreadPoolExecutor) video.es;
         while (true) {
             try {
-                System.out.println("\t\tactive:"+executor.getActiveCount()+",completed:"+executor.getCompletedTaskCount()+",cdl:"+video.cdl.getCount());
+                System.out.println("\t\tactive:"+executor.getActiveCount()+"\t\tcompleted:"+executor.getCompletedTaskCount()+"\t\tcdl:"+video.cdl.getCount());
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();

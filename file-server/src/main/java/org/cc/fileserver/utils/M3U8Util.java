@@ -42,7 +42,7 @@ public class M3U8Util {
     public static Cipher getCipher(String keyMethod, String keyUrl) {
         if (keyUrl == null)
             return null;
-        HttpURLConnection conn = HttpFileUtil.doGet(keyUrl, 0);
+        HttpURLConnection conn = HttpFileUtil.doGetForConn(keyUrl, 0, 20);
         String key = readM3U8FileData(conn).get(0);
         System.out.println("获取解密密钥：" + key);
         return getCipher(key);

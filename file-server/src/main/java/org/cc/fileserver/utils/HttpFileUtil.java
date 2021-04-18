@@ -30,10 +30,27 @@ public class HttpFileUtil {
         return conn.getURL().getProtocol() + "://" + conn.getURL().getHost() + ":" + conn.getURL().getPort();
     }
 
-    public static HttpURLConnection doGet(String url, int c) {
+    public static byte[] doGet(String url, int r, int m) {
         try {
-            if (c > 2)
-                throw new GlobalException(501, "最大尝试超过10次，直接失败");
+            URL uri = new URL(url);
+            HttpURLConnection conn = (HttpURLConnection) uri.openConnection();
+            conn.setConnectTimeout(10000);
+            conn.setReadTimeout(10000);
+            conn.connect();
+            return readData(conn);
+        } catch (SSLException | SocketTimeoutException e) {
+            if (r < m)
+                return doGet(url, r+1, m);
+            else
+                throw new GlobalException(501, "开启远程连接[" + url + "]失败");
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new GlobalException(501, "开启远程连接[" + url + "]失败");
+        }
+    }
+
+    public static HttpURLConnection doGetForConn(String url, int r, int m) {
+        try {
             URL uri = new URL(url);
             HttpURLConnection conn = (HttpURLConnection) uri.openConnection();
             conn.setConnectTimeout(10000);
@@ -41,8 +58,12 @@ public class HttpFileUtil {
             conn.connect();
             return conn;
         } catch (SSLException | SocketTimeoutException e) {
-            System.out.println(url + e.getMessage());
-            return doGet(url, ++c);
+            if (r<m)
+                return doGetForConn(url, ++r, m);
+            else {
+                e.printStackTrace();
+                throw new GlobalException(501, "开启远程连接[" + url + "]失败");
+            }
         } catch (IOException e) {
             e.printStackTrace();
             throw new GlobalException(501, "开启远程连接[" + url + "]失败");
@@ -66,7 +87,7 @@ public class HttpFileUtil {
 
     public static String downloadFile(String remoteUri, String localUri) {
         System.out.println(remoteUri);
-        HttpURLConnection conn = doGet(remoteUri, 0);
+        HttpURLConnection conn = doGetForConn(remoteUri, 0, 20);
         String contentType = conn.getHeaderField("Content-Type");
         if ("application/vnd.apple.mpegURL".equals(contentType)) {
             Video video = M3U8Video.ofNew("测试", ".mp4", remoteUri, null, FileFormType.REMOTE, localUri);
