@@ -1,5 +1,6 @@
 package org.cc.fileserver.dao;
 
+import org.cc.common.model.Pageable;
 import org.cc.fileserver.entity.Video;
 
 import java.util.List;
@@ -7,5 +8,7 @@ import java.util.List;
 public interface VideoDao {
     int save(Video video);
 
-    int save(List<Video> videos);
+    List<Video> save(List<Video> videos);
+
+    List<Video> queryAll(Pageable pageable);
 }

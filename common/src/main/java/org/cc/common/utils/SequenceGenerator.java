@@ -22,7 +22,7 @@ public class SequenceGenerator {
     private int roll = 0;
 
     private final Random random;
-    private final int applicationSeq;
+    private final int serverSeq;
     private final int MILLI_SEQ_MAX;
     private int end;
     private long lastTimeStamp = System.currentTimeMillis();
@@ -30,12 +30,13 @@ public class SequenceGenerator {
 
     public SequenceGenerator() {
         int APP_SEQ_MAX = ~(-1 << APP_SEQ_L);
-        this.applicationSeq = Integer.parseInt(System.getenv().getOrDefault("APPLICATION_SEQ", "0"));
-        if (this.applicationSeq > APP_SEQ_MAX)
+        this.serverSeq = Integer.parseInt(System.getenv().getOrDefault("SERVER_SEQ", "0"));
+        System.out.println("serverSeq: " + serverSeq);
+        if (this.serverSeq > APP_SEQ_MAX)
             throw new RuntimeException("APP SEQ OVERLOAD");
         this.MILLI_SEQ_MAX = ~(-1 << MILLI_SEQ_L);
         this.random = new Random();
-        this.end = applicationSeq << 1 | roll;
+        this.end = serverSeq << 1 | roll;
     }
 
     static class Inner {
@@ -77,7 +78,7 @@ public class SequenceGenerator {
         long now = timeGen();
         if (now < lastTimeStamp) {
             roll ^= 0x01;
-            end = applicationSeq << 1 | roll;
+            end = serverSeq << 1 | roll;
             lastTimeStamp = now;
         }
         if (now == lastTimeStamp) {

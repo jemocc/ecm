@@ -1,6 +1,10 @@
 package org.cc.fileserver.Server;
 
+import org.cc.fileserver.entity.Video;
+
+import java.util.List;
+
 public interface FileService {
 
-    int saveRemoteVideo(String fileName, String remoteUri, boolean isCacheToLocal);
+    int saveRemoteVideo(List<Video> videos);
 }

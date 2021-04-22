@@ -2,22 +2,27 @@ package org.cc.common.config;
 
 import java.util.concurrent.*;
 
-public class ExecutorConfig {
+public class ThreadPool {
 
-//    static final class Inner {
-//        private static final ExecutorService es = new ThreadPoolExecutor(2, 100, 2, TimeUnit.SECONDS,
-//                new SynchronousQueue<>(), new ThreadPoolExecutor.CallerRunsPolicy());
-//    }
-//
-//    public static ExecutorService getExecutor () {
-//        return Inner.es;
-//    }
+    static final class Inner {
+        private static final ExecutorService es = new ThreadPoolExecutor(5, 200, 10, TimeUnit.SECONDS,
+                new SynchronousQueue<>(), new BlockingRejectedExecutionHandler());
+    }
+
+    public static ExecutorService getExecutor () {
+        return Inner.es;
+    }
+
+    public static void submit(Runnable runnable) {
+        getExecutor().submit(runnable);
+    }
 
     public static ExecutorService getNewExecutor () {
         return new ThreadPoolExecutor(5, 200, 5, TimeUnit.SECONDS,
                 new SynchronousQueue<>(), new BlockingRejectedExecutionHandler());
     }
 }
+
 class BlockingRejectedExecutionHandler implements RejectedExecutionHandler {
     @Override
     public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {

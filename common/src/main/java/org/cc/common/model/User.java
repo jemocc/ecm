@@ -24,7 +24,7 @@ import java.util.Objects;
 public class User implements UserDetails, Serializable {
 
     @ApiModelProperty("用户ID")
-    private Integer uid;
+    private Integer id;
     @ApiModelProperty("用户账号名称")
     private String username;
     @ApiModelProperty("用户密码")
@@ -70,11 +70,11 @@ public class User implements UserDetails, Serializable {
     }
 
     public Integer getUid() {
-        return uid;
+        return id;
     }
 
     public void setUid(Integer uid) {
-        this.uid = uid;
+        this.id = uid;
     }
 
     public void setUsername(String username) {
@@ -104,7 +104,7 @@ public class User implements UserDetails, Serializable {
     @Override
     public String toString() {
         return "User{" +
-                "uid=" + uid +
+                "id=" + id +
                 ", username='" + username + '\'' +
                 ", password='" + password + '\'' +
                 ", status=" + status +

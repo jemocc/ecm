@@ -1,23 +1,25 @@
 package org.cc.fileserver.Server.impl;
 
-import org.cc.common.utils.DateTimeUtil;
+import org.cc.common.config.ThreadPool;
+import org.cc.common.utils.JsonUtil;
 import org.cc.fileserver.Server.FileService;
 import org.cc.fileserver.dao.CacheFileDao;
 import org.cc.fileserver.dao.VideoDao;
 import org.cc.fileserver.entity.CacheFile;
 import org.cc.fileserver.entity.Video;
+import org.cc.fileserver.entity.enums.FileFormType;
+import org.cc.fileserver.thread.DownFilesTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class FileServiceImpl implements FileService {
     private final Logger log = LoggerFactory.getLogger(FileServiceImpl.class);
-    @Value("self-config.local-file-path")
-    private String localFilePath;
 
     private final CacheFileDao cacheFileDao;
     private final VideoDao videoDao;
@@ -27,63 +29,21 @@ public class FileServiceImpl implements FileService {
         this.videoDao = videoDao;
     }
 
-    public CacheFile saveNewCacheFile(String fileName, String fileType, String remoteUri, boolean isCacheToLocal) {
-        if (fileName.contains(".")) {
-            String[] ss = fileName.split("[.]");
-            fileName = ss[0];
-            if (ss.length > 1)
-                fileType = ss[1];
-        }
-//        CacheFile cacheFile;
-//        if (isCacheToLocal) {
-//            String cachePath = getCachePath(fileName, null);
-//            HttpUtil.downloadFile(remoteUri, localFilePath + cachePath);
-//            cacheFile = CacheFile.ofNew(fileName, fileType, cachePath, FileFormType.LOCAL);
-//            cacheFile.setRemark1(remoteUri);
-//        } else
-//            cacheFile = CacheFile.ofNew(fileName, fileType, remoteUri, FileFormType.REMOTE);
-//        int fid = cacheFileDao.save(cacheFile);
-//        cacheFile.setFid(fid);
-//        return cacheFile;
-        return null;
-    }
-
-    public Video saveNewVideo(String videoName, String coverUri, String videoUri, boolean isCacheToLocal) {
-
-//        CacheFile cacheFile;
-//        if (isCacheToLocal) {
-//            String cachePath = getCachePath(fileName, null);
-//            HttpUtil.downloadFile(remoteUri, localFilePath + cachePath);
-//            cacheFile = CacheFile.of(fileName, fileType, cachePath, FileFormType.LOCAL);
-//            cacheFile.setRemark1(remoteUri);
-//        } else
-//            cacheFile = CacheFile.of(fileName, fileType, remoteUri, FileFormType.REMOTE);
-//        int fid = cacheFileDao.save(cacheFile);
-//        cacheFile.setFid(fid);
-//        return cacheFile;
-        return null;
-    }
-
     @Override
-    public int saveRemoteVideo(String fileName, String remoteUri, boolean isCacheToLocal) {
-        String fileType = null;
-        if (fileName.contains(".")) {
-            String[] ss = fileName.split("[.]");
-            fileName = ss[0];
-            if (ss.length > 1)
-                fileType = ss[1];
-        }
-
-
-        CacheFile cacheFile = saveNewCacheFile(fileName, fileType, remoteUri, isCacheToLocal);
-
-        Video video = new Video();
-        video.setName(fileName);
-
-        return 0;
-    }
-
-    private String getCachePath() {
-        return File.separator + DateTimeUtil.getCurrentDate() + File.separator;
+    public int saveRemoteVideo(List<Video> videos) {
+        log.info("请求保存远程文件[{}]个", videos.size());
+        LocalDateTime now = LocalDateTime.now();
+        videos.forEach(i -> {
+            i.setFormType(FileFormType.REMOTE);
+            i.setCreateAt(now);
+        });
+        List<CacheFile> r = videoDao.save(videos).stream().map(i -> {
+            i.setUri(i.getCoverUri());
+            return (CacheFile) i;
+        }).collect(Collectors.toList());
+        log.info("开始下载封面，with data: {}", JsonUtil.bean2Json_FN(r));
+        DownFilesTask task = new DownFilesTask(r, "update video set cover_uri = ? where id = ?");
+        ThreadPool.submit(task);
+        return r.size();
     }
 }

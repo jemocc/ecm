@@ -1,9 +1,7 @@
 package org.cc.fileserver.controller;
 
 
-import org.apache.dubbo.config.annotation.DubboReference;
 import org.cc.common.model.RspResult;
-import org.cc.common.server.TestRPCService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
@@ -16,8 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class HelloCtrl {
     private final Logger log = LoggerFactory.getLogger(HelloCtrl.class);
 
-    @DubboReference
-    private TestRPCService testRPCService;
+//    @DubboReference
+//    private TestRPCService testRPCService;
 
     @GetMapping(value = "/api/hello")
     public RspResult<Void> hello(){
@@ -27,11 +25,11 @@ public class HelloCtrl {
         return RspResult.ok(null);
     }
 
-    @GetMapping(value = "/pr/hello")
-    public RspResult<String> echo(){
-        String s = testRPCService.sayHello();
-        log.info("s: {}", s);
-        return RspResult.ok("hello");
-    }
+//    @GetMapping(value = "/pr/hello")
+//    public RspResult<String> echo(){
+//        String s = testRPCService.sayHello();
+//        log.info("s: {}", s);
+//        return RspResult.ok("hello");
+//    }
 
 }

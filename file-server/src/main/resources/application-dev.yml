@@ -12,7 +12,7 @@ spring:
     host: 47.108.61.234
     timeout: PT30M
   datasource:
-    url: jdbc:mysql://47.108.61.234:3306/file?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&useSSL=true
+    url: jdbc:mysql://47.108.61.234:3306/file?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&useSSL=true&generateSimpleParameterMetadata=true
     username: ecmRoot
     password: ecmRoot.
 #  security:
@@ -28,7 +28,7 @@ spring:
 #            client-id: 9c4a5a9082295648aa10
 #            client-secret: a330378686ba9231a564115b36486c238f5d773d
 self-config:
-  local-file-path: D:/file_local
+  local-file-path: D:\file_local
 logging:
   level:
     org.springframework.jdbc.core: debug
