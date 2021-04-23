@@ -4,6 +4,8 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.cc.common.exception.GlobalException;
 import org.cc.common.utils.DateTimeUtil;
 import org.cc.fileserver.model.Profile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLException;
 import java.io.*;
@@ -15,16 +17,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class HttpFileUtil {
-
-    private static String configPath;
-
+public class HttpUtil {
+    private static final Logger log = LoggerFactory.getLogger(HttpUtil.class);
     static {
         Security.addProvider(new BouncyCastleProvider());
-
     }
 
-    private static void printHeaders(HttpURLConnection conn) {
+    public static void printHeaders(HttpURLConnection conn) {
         Map<String, List<String>> headers = conn.getHeaderFields();
         headers.forEach((k, v) -> System.out.println(k + ": " + v.toString()));
     }
@@ -123,7 +122,7 @@ public class HttpFileUtil {
     }
 
     public static String down(String remoteUri, int n, int m) {
-        HttpURLConnection conn = HttpFileUtil.doGetForConn(remoteUri, 0, 20);
+        HttpURLConnection conn = doGetForConn(remoteUri, 0, 20);
         String ct = conn.getHeaderField("Content-Type");
         if (ct == null)
             printHeaders(conn);
@@ -132,7 +131,7 @@ public class HttpFileUtil {
             printHeaders(conn);
         File localFile = new File(getFullLocalUri(localPath));
         if (!localFile.exists())
-            HttpFileUtil.createFile(localFile);
+            createFile(localFile);
         try (
                 BufferedInputStream bis = new BufferedInputStream(conn.getInputStream());
                 BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(localFile));
@@ -159,7 +158,7 @@ public class HttpFileUtil {
         return down2(remoteUri, 0, 20);
     }
     public static byte[] down2(String remoteUri, int n, int m) {
-        HttpURLConnection conn = HttpFileUtil.doGetForConn(remoteUri, 0, 20);
+        HttpURLConnection conn = doGetForConn(remoteUri, 0, 20);
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         try (BufferedInputStream bis = new BufferedInputStream(conn.getInputStream())){
             byte[] b = new byte[20 * 1024];

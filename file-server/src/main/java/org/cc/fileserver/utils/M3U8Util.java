@@ -1,6 +1,8 @@
 package org.cc.fileserver.utils;
 
 import org.cc.common.exception.GlobalException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
@@ -22,6 +24,7 @@ import java.util.List;
  * @ModifyRecords: v1.0 new
  */
 public class M3U8Util {
+    private static final Logger log = LoggerFactory.getLogger(M3U8Util.class);
 
     public static Cipher getCipher(String key) {
         if (key == null)
@@ -34,7 +37,7 @@ public class M3U8Util {
             cipher.init(Cipher.DECRYPT_MODE, keySpec, paramSpec);
             return cipher;
         } catch (Exception ex) {
-            ex.printStackTrace();
+            log.error("获取解码器失败", ex);
             throw new GlobalException(501, "获取解码器失败");
         }
     }
@@ -44,7 +47,7 @@ public class M3U8Util {
             return null;
         HttpURLConnection conn = HttpFileUtil.doGetForConn(keyUrl, 0, 20);
         String key = readM3U8FileData(conn).get(0);
-        System.out.println("获取解密密钥：" + key);
+        log.info("获取解密密钥:{}", key);
         return getCipher(key);
     }
 
