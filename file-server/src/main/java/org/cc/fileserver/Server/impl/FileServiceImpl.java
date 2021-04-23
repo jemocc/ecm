@@ -1,5 +1,6 @@
 package org.cc.fileserver.Server.impl;
 
+import org.apache.logging.log4j.core.util.Assert;
 import org.cc.common.config.ThreadPool;
 import org.cc.common.utils.JsonUtil;
 import org.cc.fileserver.Server.FileService;
@@ -9,11 +10,13 @@ import org.cc.fileserver.entity.CacheFile;
 import org.cc.fileserver.entity.Video;
 import org.cc.fileserver.entity.enums.FileFormType;
 import org.cc.fileserver.thread.DownFilesTask;
+import org.cc.fileserver.thread.DownVideosTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -41,9 +44,20 @@ public class FileServiceImpl implements FileService {
             i.setUri(i.getCoverUri());
             return (CacheFile) i;
         }).collect(Collectors.toList());
-        log.info("开始下载封面，with data: {}", JsonUtil.bean2Json_FN(r));
+        log.info("begin to down cover，with data:\n{}", JsonUtil.bean2Json_FN(r));
         DownFilesTask task = new DownFilesTask(r, "update video set cover_uri = ? where id = ?");
         ThreadPool.submit(task);
         return r.size();
+    }
+
+    @Override
+    public int cacheVideo(Integer id) {
+        Video v = videoDao.queryOne(id);
+        Assert.requireNonEmpty(v, "video can not be found");
+        List<CacheFile> r = Collections.singletonList(v);
+        log.info("begin to down video，with data:\n{}", JsonUtil.bean2Json_FN(r));
+        DownVideosTask task = new DownVideosTask(r, "update video set uri = ?,total_time = ? where id = ?");
+        ThreadPool.submit(task);
+        return 1;
     }
 }

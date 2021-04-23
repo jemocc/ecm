@@ -10,6 +10,8 @@ import org.cc.fileserver.model.HttpFileHelper;
 import org.cc.fileserver.utils.HttpUtil;
 import org.cc.fileserver.utils.M3U8Util;
 import org.cc.fileserver.utils.PublicUtil_FS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -19,7 +21,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -29,25 +30,22 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class M3u8DownTask implements Runnable {
-    private final Video video;
-    private final CountDownLatch cdl;
+public class DownM3u8Task extends DownFileTask {
+    private static final Logger log = LoggerFactory.getLogger(DownM3u8Task.class);
 
     private final List<String> tss = new ArrayList<>();
-    private LocalTime totalTime;
     private Cipher cipher;
     private final Map<Integer, byte[]> dataMap = new ConcurrentHashMap<>();
     private final AtomicBoolean cancel = new AtomicBoolean(false);
 
-    public M3u8DownTask(CacheFile file, CountDownLatch cdl) {
-        this.video = (Video) file;
-        this.cdl = cdl;
+    public DownM3u8Task(CacheFile file, CountDownLatch cdl) {
+        super(file, cdl);
     }
 
     @Override
     public void run() {
         try {
-            HttpFileHelper helper = HttpFileHelper.uri(video.getUri()).down();
+            HttpFileHelper helper = HttpFileHelper.uri(file.getUri()).down();
             String domain = helper.getDomain();
             List<String> data = M3U8Util.readM3U8FileData(helper.getData());
 
@@ -68,18 +66,18 @@ public class M3u8DownTask implements Runnable {
                         throw new GlobalException(501, "密钥获取失败：" + line);
                 }
             }
-            video.setTotalTime(DateTimeUtil.parseTime(totalTime.intValue()));
+            ((Video)file).setTotalTime(DateTimeUtil.parseTime(totalTime.intValue()));
             if (tss.get(0).endsWith(".m3u8")) {
-                video.setUri(domain + tss.get(0));
+                file.setUri(domain + tss.get(0));
                 run();
             } else {
-                System.out.println("total part: " + tss.size());
+                log.info("total part: {}", tss.size());
                 CountDownLatch tsCdl = new CountDownLatch(tss.size());
                 for (int i = 0; i < tss.size(); i++) {
                     DoGetTask task = new DoGetTask(i, domain + tss.get(i), tsCdl, dataMap, cancel);
                     ThreadPool.submit(task);
                 }
-                System.out.println("任务提交完成");
+                log.info("文件[{}-{}]下载任务提交完成", file.getId(), file.getName());
                 waitWriteFile(tsCdl);
             }
         } finally {
@@ -94,9 +92,9 @@ public class M3u8DownTask implements Runnable {
             PublicUtil_FS.createFile(localFile);
         try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(localFile))) {
             tsCdl.await();
-            System.out.println("\n下载任务执行完成");
+            log.info("文件[{}-{}]下载任务执行完成", file.getId(), file.getName());
             if (cancel.get()) {
-                System.out.println("文件[" + video.getName() + "]下载取消");
+                log.warn("文件[{}-{}]下载取消", file.getId(), file.getName());
                 return;
             }
             dataMap.forEach((k, v) -> {
@@ -108,9 +106,9 @@ public class M3u8DownTask implements Runnable {
                     e.printStackTrace();
                 }
             });
-            video.setFormType(FileFormType.LOCAL);
-            video.setUri(localPath);
-            System.out.println("文件[" + video.getName() + "]下载完成");
+            file.setFormType(FileFormType.LOCAL);
+            file.setUri(localPath);
+            log.info("文件[{}-{}]下载成功", file.getId(), file.getName());
         } catch (InterruptedException | IOException e) {
             e.printStackTrace();
             PublicUtil_FS.deleteFile(localFile);

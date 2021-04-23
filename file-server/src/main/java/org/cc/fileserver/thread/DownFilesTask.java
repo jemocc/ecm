@@ -11,9 +11,9 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 public class DownFilesTask implements Runnable {
-    private final List<CacheFile> files;
-    private final String callback;
-    private final CountDownLatch cdl;
+    final List<CacheFile> files;
+    final String callback;
+    final CountDownLatch cdl;
 
     public DownFilesTask(List<CacheFile> files, String callback) {
         this.files = files;
@@ -26,21 +26,25 @@ public class DownFilesTask implements Runnable {
         files.forEach(i -> ThreadPool.submit(new DownFileTask(i, cdl)));
         try {
             cdl.await();
-            execCallback();
+            if (callback != null)
+                execCallback();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    private void execCallback() {
-        if (callback == null)
-            return;
+    void execCallback() {
         JdbcTemplate jdbcTemplate = Profile.getBean(JdbcTemplate.class);
+        List<Object[]> args = getArgs();
+        jdbcTemplate.batchUpdate(callback, args);
+    }
+
+    List<Object[]> getArgs() {
         List<Object[]> args = new ArrayList<>();
         files.forEach(i -> {
             if (i.getFormType() == FileFormType.LOCAL)
                 args.add(new Object[]{i.getUri(), i.getId()});
         });
-        jdbcTemplate.batchUpdate(callback, args);
+        return args;
     }
 }

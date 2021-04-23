@@ -10,5 +10,7 @@ public interface VideoDao {
 
     List<Video> save(List<Video> videos);
 
+    Video queryOne(Integer id);
+
     List<Video> queryAll(Pageable pageable);
 }

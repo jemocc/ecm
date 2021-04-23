@@ -3,9 +3,7 @@ package org.cc.fileserver.controller;
 import org.cc.common.model.RspResult;
 import org.cc.fileserver.Server.FileService;
 import org.cc.fileserver.entity.Video;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -23,4 +21,9 @@ public class FileCtrl {
         return RspResult.ok(i);
     }
 
+    @GetMapping("/pr/cache-video/{id}")
+    public RspResult<Integer> saveRemoteVideo(@PathVariable("id") Integer id) {
+        int i = fileService.cacheVideo(id);
+        return RspResult.ok(i);
+    }
 }

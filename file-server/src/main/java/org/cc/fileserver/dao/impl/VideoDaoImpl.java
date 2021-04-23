@@ -51,6 +51,12 @@ public class VideoDaoImpl implements VideoDao {
     }
 
     @Override
+    public Video queryOne(Integer id) {
+        String sql2 = "select * from video where id = ?";
+        return jdbcTemplate.queryForObject(sql2, new Object[]{id}, new BeanPropertyRowMapper<>(Video.class));
+    }
+
+    @Override
     public List<Video> queryAll(Pageable pageable) {
         String sql = Pageable.warp(pageable, "select * from video order by id desc");
         return null;
