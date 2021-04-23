@@ -1,13 +1,17 @@
 package org.cc.fileserver.thread;
 
 import org.cc.common.config.ThreadPool;
+import org.cc.common.exception.GlobalException;
 import org.cc.fileserver.entity.CacheFile;
 import org.cc.fileserver.entity.enums.FileFormType;
-import org.cc.fileserver.utils.HttpFileUtil;
+import org.cc.fileserver.model.HttpFileHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.CountDownLatch;
 
 public class DownFileTask implements Runnable {
+    private static final Logger log = LoggerFactory.getLogger(DownFileTask.class);
     private final CacheFile file;
     private final CountDownLatch cdl;
 
@@ -24,11 +28,11 @@ public class DownFileTask implements Runnable {
             ThreadPool.submit(task);
         } else {
             try {
-                String localUri = HttpFileUtil.down(remoteUri);
-                file.setUri(localUri);
-            } catch (Exception e) {
-                e.printStackTrace();
-                System.out.println(e.getMessage());
+                HttpFileHelper helper = HttpFileHelper.uri(remoteUri).toFile().down();
+                file.setFormType(FileFormType.LOCAL);
+                file.setUri(helper.getLocalUri());
+            } catch (GlobalException e) {
+                log.error(e.getMessage());
             } finally {
                 cdl.countDown();
             }

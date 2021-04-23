@@ -1,6 +1,7 @@
 package org.cc.fileserver.utils;
 
 import org.cc.common.exception.GlobalException;
+import org.cc.fileserver.model.HttpFileHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +15,7 @@ import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -45,23 +47,15 @@ public class M3U8Util {
     public static Cipher getCipher(String keyMethod, String keyUrl) {
         if (keyUrl == null)
             return null;
-        HttpURLConnection conn = HttpFileUtil.doGetForConn(keyUrl, 0, 20);
-        String key = readM3U8FileData(conn).get(0);
+        HttpFileHelper helper = HttpFileHelper.uri(keyUrl).down();
+        String key = readM3U8FileData(helper.getData()).get(0);
         log.info("获取解密密钥:{}", key);
         return getCipher(key);
     }
 
-    public static List<String> readM3U8FileData(HttpURLConnection conn) {
-        List<String> data = new ArrayList<>();
-        try(BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
-            String line;
-            while ((line = br.readLine()) != null)
-                data.add(line);
-            return data;
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new GlobalException(501, "下载远程文件[" + conn.getURL().getPath() + "]失败");
-        }
+    public static List<String> readM3U8FileData(byte[] data) {
+        String d = new String(data);
+        return Arrays.asList(d.split("[\r\n]+"));
     }
 
 }

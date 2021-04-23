@@ -6,8 +6,10 @@ import org.cc.common.utils.DateTimeUtil;
 import org.cc.fileserver.entity.CacheFile;
 import org.cc.fileserver.entity.Video;
 import org.cc.fileserver.entity.enums.FileFormType;
-import org.cc.fileserver.utils.HttpFileUtil;
+import org.cc.fileserver.model.HttpFileHelper;
+import org.cc.fileserver.utils.HttpUtil;
 import org.cc.fileserver.utils.M3U8Util;
+import org.cc.fileserver.utils.PublicUtil_FS;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -17,14 +19,13 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.net.HttpURLConnection;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,7 +37,7 @@ public class M3u8DownTask implements Runnable {
     private LocalTime totalTime;
     private Cipher cipher;
     private final Map<Integer, byte[]> dataMap = new ConcurrentHashMap<>();
-    private AtomicInteger flag;
+    private final AtomicBoolean cancel = new AtomicBoolean(false);
 
     public M3u8DownTask(CacheFile file, CountDownLatch cdl) {
         this.video = (Video) file;
@@ -46,10 +47,9 @@ public class M3u8DownTask implements Runnable {
     @Override
     public void run() {
         try {
-            HttpURLConnection conn = HttpFileUtil.doGetForConn(video.getUri(), 0, 20);
-            String domain = HttpFileUtil.getDomain(conn);
-            List<String> data = M3U8Util.readM3U8FileData(conn);
-            conn.disconnect();
+            HttpFileHelper helper = HttpFileHelper.uri(video.getUri()).down();
+            String domain = helper.getDomain();
+            List<String> data = M3U8Util.readM3U8FileData(helper.getData());
 
             BigDecimal totalTime = BigDecimal.ZERO;
             for (String line : data) {
@@ -76,7 +76,7 @@ public class M3u8DownTask implements Runnable {
                 System.out.println("total part: " + tss.size());
                 CountDownLatch tsCdl = new CountDownLatch(tss.size());
                 for (int i = 0; i < tss.size(); i++) {
-                    DoGetTask task = new DoGetTask(i, domain + tss.get(i), tsCdl, dataMap);
+                    DoGetTask task = new DoGetTask(i, domain + tss.get(i), tsCdl, dataMap, cancel);
                     ThreadPool.submit(task);
                 }
                 System.out.println("任务提交完成");
@@ -88,14 +88,14 @@ public class M3u8DownTask implements Runnable {
     }
 
     private void waitWriteFile(CountDownLatch tsCdl) {
-        String localPath = HttpFileUtil.getLocalUri("mp4");
-        File localFile = new File(HttpFileUtil.getFullLocalUri(localPath));
+        String localPath = HttpUtil.getLocalUri("mp4");
+        File localFile = new File(HttpUtil.getFullLocalUri(localPath));
         if (!localFile.exists())
-            HttpFileUtil.createFile(localFile);
+            PublicUtil_FS.createFile(localFile);
         try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(localFile))) {
             tsCdl.await();
             System.out.println("\n下载任务执行完成");
-            if (flag.get() == 1) {
+            if (cancel.get()) {
                 System.out.println("文件[" + video.getName() + "]下载取消");
                 return;
             }
@@ -113,7 +113,7 @@ public class M3u8DownTask implements Runnable {
             System.out.println("文件[" + video.getName() + "]下载完成");
         } catch (InterruptedException | IOException e) {
             e.printStackTrace();
-            HttpFileUtil.deleteFile(localFile);
+            PublicUtil_FS.deleteFile(localFile);
         }
     }
 }
