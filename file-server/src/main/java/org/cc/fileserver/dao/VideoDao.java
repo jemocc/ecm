@@ -13,4 +13,6 @@ public interface VideoDao {
     Video queryOne(Integer id);
 
     List<Video> queryAll(Pageable pageable);
+
+    List<Video> queryAllWithoutCacheCover(Pageable pageable);
 }

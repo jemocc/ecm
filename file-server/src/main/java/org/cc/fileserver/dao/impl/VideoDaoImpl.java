@@ -61,4 +61,10 @@ public class VideoDaoImpl implements VideoDao {
         String sql = Pageable.warp(pageable, "select * from video order by id desc");
         return null;
     }
+
+    @Override
+    public List<Video> queryAllWithoutCacheCover(Pageable pageable) {
+        String sql = Pageable.warp(pageable, "select * from video where cover_uri like 'http%'");
+        return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(Video.class));
+    }
 }

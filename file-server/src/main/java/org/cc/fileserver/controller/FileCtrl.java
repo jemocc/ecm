@@ -26,4 +26,10 @@ public class FileCtrl {
         int i = fileService.cacheVideo(id);
         return RspResult.ok(i);
     }
+
+    @GetMapping("/pr/cache-cover")
+    public RspResult<Void> cacheCover() {
+        fileService.cacheCover();
+        return RspResult.ok(null);
+    }
 }

@@ -9,4 +9,6 @@ public interface FileService {
     int saveRemoteVideo(List<Video> videos);
 
     int cacheVideo(Integer id);
+
+    void cacheCover();
 }

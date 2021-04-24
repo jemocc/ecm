@@ -2,6 +2,7 @@ package org.cc.fileserver.Server.impl;
 
 import org.apache.logging.log4j.core.util.Assert;
 import org.cc.common.config.ThreadPool;
+import org.cc.common.model.Pageable;
 import org.cc.common.utils.JsonUtil;
 import org.cc.fileserver.Server.FileService;
 import org.cc.fileserver.dao.CacheFileDao;
@@ -35,6 +36,8 @@ public class FileServiceImpl implements FileService {
     @Override
     public int saveRemoteVideo(List<Video> videos) {
         log.info("请求保存远程文件[{}]个", videos.size());
+        if (videos.size() == 0)
+            return 0;
         LocalDateTime now = LocalDateTime.now();
         videos.forEach(i -> {
             i.setFormType(FileFormType.REMOTE);
@@ -59,5 +62,12 @@ public class FileServiceImpl implements FileService {
         DownVideosTask task = new DownVideosTask(r, "update video set uri = ?,total_time = ? where id = ?");
         ThreadPool.submit(task);
         return 1;
+    }
+
+    @Override
+    public void cacheCover() {
+        Pageable pageable = Pageable.of(0, 20);
+        List<Video> videos = videoDao.queryAllWithoutCacheCover(pageable);
+        log.info(videos.toString());
     }
 }

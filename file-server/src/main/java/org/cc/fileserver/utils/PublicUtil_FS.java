@@ -22,18 +22,25 @@ public class PublicUtil_FS {
             if(!f.createNewFile())
                 throw new GlobalException(501, "创建本地文件[" + f.getAbsolutePath() + "]失败");
         } catch (IOException e) {
-            File d = new File(f.getAbsolutePath().replaceAll("[/\\\\][^/\\\\]*$", ""));
-            if (d.exists()) {
-                e.printStackTrace();
-                throw new GlobalException(501, "创建本地文件[" + f.getAbsolutePath() + "]异常");
-            } else {
-                if (d.mkdirs())
-                    createFile(f);
-                else
+            String dirPath = f.getAbsolutePath().replaceAll("[/\\\\][^/\\\\]*$", "");
+            createDir(dirPath);
+            try {
+                if(!f.createNewFile())
                     throw new GlobalException(501, "创建本地文件[" + f.getAbsolutePath() + "]失败");
+            } catch (IOException e2) {
+                e2.printStackTrace();
+                throw new GlobalException(501, "创建本地文件[" + f.getAbsolutePath() + "]异常");
             }
         }
     }
+
+    public static synchronized void createDir(String path) {
+        File dir = new File(path);
+        if (dir.exists())
+            return;
+        log.info("创建文件目录[{}], r:[{}]",dir.getAbsolutePath(), dir.mkdirs());
+    }
+
     public static void deleteFile(File file) {
         if (file.delete())
             log.info("删除文件[{}]成功", file.getName());

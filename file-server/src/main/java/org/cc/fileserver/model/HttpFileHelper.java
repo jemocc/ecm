@@ -88,7 +88,7 @@ public class HttpFileHelper {
             throw new GlobalException(501, "远程文件[" + uri + "]下载失败");
     }
 
-    private void doGet() throws IOException {
+    private void doGet() throws Exception {
         URL url = new URL(uri);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setConnectTimeout(connectionTimeOut);
@@ -103,7 +103,7 @@ public class HttpFileHelper {
         }
     }
 
-    private void transDataToFile(HttpURLConnection conn) throws IOException {
+    private void transDataToFile(HttpURLConnection conn) throws Exception {
         String ct = conn.getHeaderField("Content-Type");
         if (ct == null)
             HttpUtil.printHeaders(conn);
@@ -120,9 +120,6 @@ public class HttpFileHelper {
             while ((len = bis.read(b)) != -1)
                 bos.write(b, 0, len);
             log.info("下载远程文件[{}]成功", uri);
-        } catch (Exception e) {
-            log.error("下载文件失败", e);
-            throw e;
         }
     }
 
