@@ -43,14 +43,7 @@ public class FileServiceImpl implements FileService {
             i.setFormType(FileFormType.REMOTE);
             i.setCreateAt(now);
         });
-        List<CacheFile> r = videoDao.save(videos).stream().map(i -> {
-            i.setUri(i.getCoverUri());
-            return (CacheFile) i;
-        }).collect(Collectors.toList());
-        log.info("begin to down cover，with data:\n{}", JsonUtil.bean2Json_FN(r));
-        DownFilesTask task = new DownFilesTask(r, "update video set cover_uri = ? where id = ?");
-        ThreadPool.submit(task);
-        return r.size();
+        return videoDao.save(videos).size();
     }
 
     @Override
@@ -67,7 +60,12 @@ public class FileServiceImpl implements FileService {
     @Override
     public void cacheCover() {
         Pageable pageable = Pageable.of(0, 20);
-        List<Video> videos = videoDao.queryAllWithoutCacheCover(pageable);
-        log.info(videos.toString());
+        List<CacheFile> r = videoDao.queryAllWithoutCacheCover(pageable).stream().map(i -> {
+            i.setUri(i.getCoverUri());
+            return (CacheFile) i;
+        }).collect(Collectors.toList());
+        log.info("begin to down cover，with data:\n{}", JsonUtil.bean2Json_FN(r));
+        DownFilesTask task = new DownFilesTask(r, "update video set cover_uri = ? where id = ?");
+        ThreadPool.submit(task);
     }
 }
