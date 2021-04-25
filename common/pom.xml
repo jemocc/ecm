@@ -24,7 +24,11 @@
 			<artifactId>spring-security-oauth2</artifactId>
 			<scope>provided</scope>
 		</dependency>
-	</dependencies>
+		<dependency>
+			<groupId>com.alibaba.cloud</groupId>
+			<artifactId>spring-cloud-starter-dubbo</artifactId>
+		</dependency>
+    </dependencies>
 
 	<build>
 		<plugins>
