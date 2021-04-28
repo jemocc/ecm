@@ -11,8 +11,12 @@ spring:
   redis:
     host: 47.108.61.234
     timeout: PT30M
+    redisson:
+      database: 2
+
   datasource:
-    url: jdbc:mysql://47.108.61.234:3306/file?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&useSSL=true&generateSimpleParameterMetadata=true
+    driver-class-name: org.mariadb.jdbc.Driver
+    url: jdbc:mariadb://47.108.61.234:3306/fs?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&useSSL=true
     username: ecmRoot
     password: ecmRoot.
 #  security:

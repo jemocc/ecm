@@ -25,6 +25,7 @@
         <spring.cloud.alibaba.dependencies.version>2.2.3.RELEASE</spring.cloud.alibaba.dependencies.version>
         <org.projectlombok.lombok.version>1.18.16</org.projectlombok.lombok.version>
         <spring.security.oauth2.version>2.3.5.RELEASE</spring.security.oauth2.version>
+        <redisson.version>3.15.4</redisson.version>
     </properties>
 
     <modules>
@@ -77,6 +78,11 @@
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson</artifactId>
+            <version>${redisson.version}</version>
+        </dependency>
 <!--        <dependency>-->
 <!--            <groupId>com.alibaba.cloud</groupId>-->
 <!--            <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>-->
@@ -102,8 +108,8 @@
             <artifactId>gson</artifactId>
         </dependency>
         <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
+            <groupId>org.mariadb.jdbc</groupId>
+            <artifactId>mariadb-java-client</artifactId>
             <scope>runtime</scope>
         </dependency>
 

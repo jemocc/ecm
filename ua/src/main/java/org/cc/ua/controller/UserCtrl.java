@@ -23,7 +23,7 @@ public class UserCtrl {
         Authentication authentication = context.getAuthentication();
         User user = (User) authentication.getPrincipal();
         user.setPassword(null);
-        log.info("用户：{}", JsonUtil.bean2Json(user));
+        log.info("用户：{}", JsonUtil.bean2Json_FN(user));
         return RspResult.ok(user);
     }
 
