@@ -34,7 +34,7 @@ public class RedisConfiguration {
     }
 
     @Bean
-    public RedissonClient redisson() {
+    public RedissonClient redissonClient() {
         if (redisson == null)
             return null;
         return Redisson.create(redisson);
