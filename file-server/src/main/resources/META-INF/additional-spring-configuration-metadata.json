@@ -9,5 +9,10 @@
       "name": "self-config.local-file-path",
       "type": "java.lang.String",
       "description": "本地文件存储位置."
+    },
+    {
+      "name": "spring.redis.redisson.singleServerConfig.address",
+      "type": "java.lang.String",
+      "description": "redisson 连接地址."
     }
   ] }

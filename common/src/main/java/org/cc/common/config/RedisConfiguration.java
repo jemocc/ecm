@@ -1,9 +1,6 @@
 package org.cc.common.config;
 
-import lombok.Getter;
 import lombok.Setter;
-import lombok.experimental.Accessors;
-import org.cc.common.utils.JsonUtil;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;

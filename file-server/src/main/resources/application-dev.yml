@@ -12,7 +12,12 @@ spring:
     host: 47.108.61.234
     timeout: PT30M
     redisson:
-      database: 2
+      singleServerConfig:
+        address: "redis://47.108.61.234:6379"
+        database: 2
+      threads: 0
+      nettyThreads: 0
+      transportMode: NIO
 
   datasource:
     driver-class-name: org.mariadb.jdbc.Driver
