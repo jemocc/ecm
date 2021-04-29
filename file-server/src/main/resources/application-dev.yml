@@ -21,7 +21,7 @@ spring:
 
   datasource:
     driver-class-name: org.mariadb.jdbc.Driver
-    url: jdbc:mariadb://47.108.61.234:3306/fs?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&useSSL=true
+    url: jdbc:mariadb://47.108.61.234:3306/fs
     username: ecmRoot
     password: ecmRoot.
 #  security:

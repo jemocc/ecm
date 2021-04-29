@@ -1,6 +1,8 @@
 package org.cc.fileserver.Server.impl;
 
 import org.apache.logging.log4j.core.util.Assert;
+import org.cc.common.component.DistributeSynchronized;
+import org.cc.common.utils.PublicUtil;
 import org.cc.common.config.ThreadPool;
 import org.cc.common.model.Pageable;
 import org.cc.common.utils.JsonUtil;
@@ -14,6 +16,7 @@ import org.cc.fileserver.thread.DownFilesTask;
 import org.cc.fileserver.thread.DownVideosTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -64,8 +67,19 @@ public class FileServiceImpl implements FileService {
             i.setUri(i.getCoverUri());
             return (CacheFile) i;
         }).collect(Collectors.toList());
-        log.info("begin to down cover，with data:\n{}", JsonUtil.bean2Json_FN(r));
-        DownFilesTask task = new DownFilesTask(r, "update video set cover_uri = ? where id = ?");
-        ThreadPool.submit(task);
+        log.info("begin to down cover, with data:\n{}", JsonUtil.bean2Json_FN(r));
+        if (r.size() > 0) {
+            DownFilesTask task = new DownFilesTask(r, "update video set cover_uri = ? where id = ?");
+            ThreadPool.submit(task);
+        }
+    }
+
+    @Override
+    @DistributeSynchronized
+    @Async
+    public void testLock() {
+        log.info("exec test lock start.");
+        PublicUtil.sleep(5000);
+        log.info("exec test lock end.");
     }
 }

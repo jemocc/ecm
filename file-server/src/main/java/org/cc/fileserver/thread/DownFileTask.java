@@ -1,6 +1,5 @@
 package org.cc.fileserver.thread;
 
-import org.cc.common.config.ThreadPool;
 import org.cc.common.exception.GlobalException;
 import org.cc.fileserver.entity.CacheFile;
 import org.cc.fileserver.entity.enums.FileFormType;

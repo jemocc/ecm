@@ -11,4 +11,6 @@ public interface FileService {
     int cacheVideo(Integer id);
 
     void cacheCover();
+
+    void testLock();
 }

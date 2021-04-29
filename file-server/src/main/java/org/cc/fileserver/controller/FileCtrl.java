@@ -32,4 +32,10 @@ public class FileCtrl {
         fileService.cacheCover();
         return RspResult.ok(null);
     }
+
+    @GetMapping("/pr/test-lock")
+    public RspResult<Void> testLock() {
+        fileService.testLock();
+        return RspResult.ok(null);
+    }
 }

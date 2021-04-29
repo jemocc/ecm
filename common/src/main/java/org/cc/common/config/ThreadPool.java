@@ -1,14 +1,21 @@
 package org.cc.common.config;
 
 import org.slf4j.MDC;
+import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
+import org.springframework.aop.interceptor.SimpleAsyncUncaughtExceptionHandler;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.TaskDecorator;
 import org.springframework.lang.NonNull;
+import org.springframework.scheduling.annotation.AsyncConfigurer;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.Map;
 import java.util.concurrent.*;
 
-public class ThreadPool {
+@Configuration
+@EnableAsync
+public class ThreadPool implements AsyncConfigurer {
 
     private static final Executor executor;
 
@@ -21,7 +28,18 @@ public class ThreadPool {
         es.setAllowCoreThreadTimeOut(true);
         es.setRejectedExecutionHandler(new BlockingRejectedExecutionHandler());
         es.setTaskDecorator(new ContextCopyingDecorator());
+        es.initialize();
         executor = es;
+    }
+
+    @Override
+    public Executor getAsyncExecutor() {
+        return executor;
+    }
+
+    @Override
+    public AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
+        return new SimpleAsyncUncaughtExceptionHandler();
     }
 
     static class ContextCopyingDecorator implements TaskDecorator {
