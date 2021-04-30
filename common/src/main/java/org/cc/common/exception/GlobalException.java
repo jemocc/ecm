@@ -17,4 +17,9 @@ public class GlobalException extends RuntimeException{
     public String getMessage() {
         return message;
     }
+
+    @Override
+    public String toString() {
+        return "{\"code\":" + code + ",\"message\":\"" + message + "\"}";
+    }
 }

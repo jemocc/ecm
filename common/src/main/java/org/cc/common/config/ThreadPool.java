@@ -1,5 +1,8 @@
 package org.cc.common.config;
 
+import org.cc.common.exception.GlobalException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
 import org.springframework.aop.interceptor.SimpleAsyncUncaughtExceptionHandler;
@@ -10,13 +13,14 @@ import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.*;
 
 @Configuration
 @EnableAsync
 public class ThreadPool implements AsyncConfigurer {
-
+    private static final Logger log = LoggerFactory.getLogger(ThreadPool.class);
     private static final Executor executor;
 
     static {
@@ -39,7 +43,13 @@ public class ThreadPool implements AsyncConfigurer {
 
     @Override
     public AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
-        return new SimpleAsyncUncaughtExceptionHandler();
+        return (throwable, method, objects) -> {
+            if (throwable instanceof GlobalException) {
+                log.error("Async exec error, method: [{}], ex: {}", method, throwable.toString());
+            } else {
+                log.error("Async exec error, method: [{}], ex:", method, throwable);
+            }
+        };
     }
 
     static class ContextCopyingDecorator implements TaskDecorator {
@@ -81,5 +91,6 @@ public class ThreadPool implements AsyncConfigurer {
     public static Future<?> submit(Runnable runnable) {
         return ((ThreadPoolTaskExecutor)executor).submit(runnable);
     }
+
 }
 

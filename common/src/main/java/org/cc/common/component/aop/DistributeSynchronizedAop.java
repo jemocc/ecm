@@ -27,20 +27,24 @@ public class DistributeSynchronizedAop {
 
     @Around("@annotation(ann)")
     public Object interceptor(ProceedingJoinPoint joinPoint, DistributeSynchronized ann) throws Throwable {
-        String key;
-        Object[] args = joinPoint.getArgs();
-        if (args.length > 0 && args[0] instanceof String) {
-            key = ann.lockKey() + ":" + args[0].toString();
-        } else {
-            key = ann.lockKey();
-        }
+        String key = getLockKey(joinPoint, ann);
         RLock lock = RedisOperator.getLock(key);
         if (lock.tryLock(ann.waitTime(), ann.leaseTime(), TimeUnit.SECONDS)) {
+            log.info("get lock: {}", key);
             Object result = joinPoint.proceed();
             lock.unlock();
             return result;
         } else {
-            throw new GlobalException(501, "执行资源获取失败");
+            throw new GlobalException(50101, "执行资源获取失败");
+        }
+    }
+
+    private String getLockKey(ProceedingJoinPoint joinPoint, DistributeSynchronized ann) {
+        Object[] args = joinPoint.getArgs();
+        if (args.length > 0 && (args[0] instanceof String || args[0] instanceof Number)) {
+            return ann.lockKey() + ":" + args[0].toString();
+        } else {
+            return ann.lockKey();
         }
     }
 }

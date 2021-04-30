@@ -20,9 +20,7 @@ public class RedisOperator {
         while (redissonClient == null) {
             PublicUtil.sleep(100);
         }
-        key = "locks:" + key;
-        log.info("get lock： {}", key);
-        return redissonClient.getLock(key);
+        return redissonClient.getLock("locks:" + key);
     }
 
 }

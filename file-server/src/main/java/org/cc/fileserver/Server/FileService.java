@@ -12,5 +12,5 @@ public interface FileService {
 
     void cacheCover();
 
-    void testLock();
+    void testLock(Integer time);
 }

@@ -77,9 +77,9 @@ public class FileServiceImpl implements FileService {
     @Override
     @DistributeSynchronized
     @Async
-    public void testLock() {
+    public void testLock(Integer time) {
         log.info("exec test lock start.");
-        PublicUtil.sleep(5000);
+        PublicUtil.sleep(time == null ? 5000 : time);
         log.info("exec test lock end.");
     }
 }

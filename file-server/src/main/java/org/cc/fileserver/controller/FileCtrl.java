@@ -34,8 +34,8 @@ public class FileCtrl {
     }
 
     @GetMapping("/pr/test-lock")
-    public RspResult<Void> testLock() {
-        fileService.testLock();
+    public RspResult<Void> testLock(@RequestParam Integer time) {
+        fileService.testLock(time);
         return RspResult.ok(null);
     }
 }
