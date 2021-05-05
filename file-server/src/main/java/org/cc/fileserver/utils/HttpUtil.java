@@ -45,10 +45,12 @@ public class HttpUtil {
     public static String getFileType(String contentType) {
         if (contentType == null)
             return "";
-        if (contentType.contains("image/jpeg") || contentType.contains("image/pjpeg"))
+        if (contentType.contains("jpeg"))
             return "jpg";
-        else if (contentType.contains("image/png") || contentType.contains("image/x-png"))
+        else if (contentType.contains("png"))
             return "png";
+        else if (contentType.contains("mp4"))
+            return "mp4";
         return "";
     }
 

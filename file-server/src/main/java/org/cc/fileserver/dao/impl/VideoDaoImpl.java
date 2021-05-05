@@ -1,5 +1,7 @@
 package org.cc.fileserver.dao.impl;
 
+import org.cc.common.model.Page;
+import org.cc.common.model.PageQuery;
 import org.cc.common.model.Pageable;
 import org.cc.common.utils.PublicUtil;
 import org.cc.common.utils.SequenceGenerator;
@@ -12,7 +14,6 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -57,14 +58,19 @@ public class VideoDaoImpl implements VideoDao {
     }
 
     @Override
-    public List<Video> queryAll(Pageable pageable) {
-        String sql = Pageable.warp(pageable, "select * from video order by id desc");
-        return null;
+    public Page<Video> queryAll(Pageable pageable) {
+        return PageQuery.of(pageable, "select * from video order by id asc").exec(jdbcTemplate, Video.class);
     }
 
     @Override
     public List<Video> queryAllWithoutCacheCover(Pageable pageable) {
         String sql = Pageable.warp(pageable, "select * from video where cover_uri like 'http%'");
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(Video.class));
+    }
+
+    @Override
+    public Integer delRepeat() {
+        String sql = "delete from video where name in (select name from (select name,count(*) c from video group by name) t where t.c > 1)and id not in (select mid from (select min(id) mid,count(*) c from video group by name) t where t.c > 1)";
+        return jdbcTemplate.update(sql);
     }
 }

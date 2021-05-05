@@ -36,7 +36,7 @@ public class DownVideosTask extends DownFilesTask {
         files.forEach(i -> {
             Video v = (Video)i;
             if (i.getFormType() == FileFormType.LOCAL)
-                args.add(new Object[]{v.getUri(), v.getTotalTime(), v.getId()});
+                args.add(new Object[]{v.getType(), v.getUri(), v.getTotalTime(), v.getId()});
         });
         return args;
     }

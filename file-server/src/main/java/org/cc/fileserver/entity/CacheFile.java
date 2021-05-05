@@ -38,6 +38,9 @@ public class CacheFile {
     @ApiModelProperty("来源类型")
     private FileFormType formType;
 
+    @ApiModelProperty("收藏类别")
+    private String favoriteType;
+
     @ApiModelProperty("备注1")
     private String remark1;
 

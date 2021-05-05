@@ -24,6 +24,7 @@ public class DownFileTask implements Runnable {
         String remoteUri = file.getUri();
         try {
             HttpFileHelper helper = HttpFileHelper.uri(remoteUri).toFile().down();
+            file.setType(helper.getType());
             file.setFormType(FileFormType.LOCAL);
             file.setUri(helper.getLocalUri());
         } catch (GlobalException e) {

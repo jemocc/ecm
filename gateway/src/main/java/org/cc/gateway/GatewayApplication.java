@@ -1,6 +1,7 @@
 package org.cc.gateway;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
@@ -13,8 +14,8 @@ import java.net.UnknownHostException;
 
 @SpringBootApplication(exclude= {DataSourceAutoConfiguration.class})
 @EnableDiscoveryClient
-@Slf4j
 public class GatewayApplication {
+	private static final Logger log = LoggerFactory.getLogger(GatewayApplication.class);
 
 	public static void main(String[] args) {
 		ApplicationContext app = SpringApplication.run(GatewayApplication.class, args);

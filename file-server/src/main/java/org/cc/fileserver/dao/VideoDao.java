@@ -1,5 +1,6 @@
 package org.cc.fileserver.dao;
 
+import org.cc.common.model.Page;
 import org.cc.common.model.Pageable;
 import org.cc.fileserver.entity.Video;
 
@@ -12,7 +13,9 @@ public interface VideoDao {
 
     Video queryOne(Integer id);
 
-    List<Video> queryAll(Pageable pageable);
+    Page<Video> queryAll(Pageable pageable);
 
     List<Video> queryAllWithoutCacheCover(Pageable pageable);
+
+    Integer delRepeat();
 }

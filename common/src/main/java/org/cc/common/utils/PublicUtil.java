@@ -20,7 +20,7 @@ public class PublicUtil {
         try {
             Thread.sleep(time);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            throw new RuntimeException("线程中断");
         }
     }
 }

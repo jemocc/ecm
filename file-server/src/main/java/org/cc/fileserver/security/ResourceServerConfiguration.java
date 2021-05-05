@@ -1,12 +1,15 @@
 package org.cc.fileserver.security;
 
+import org.cc.common.model.MyWebResponseExceptionTranslator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.ResourceServerConfigurerAdapter;
+import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.ResourceServerSecurityConfigurer;
+import org.springframework.security.oauth2.provider.error.OAuth2AuthenticationEntryPoint;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
 
@@ -23,6 +26,9 @@ public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter
     public void configure(ResourceServerSecurityConfigurer resources) throws Exception {
         super.configure(resources);
         resources.resourceId(FILE_RESOURCE_ID).stateless(true);
+        OAuth2AuthenticationEntryPoint authenticationEntryPoint = new OAuth2AuthenticationEntryPoint();
+        authenticationEntryPoint.setExceptionTranslator(new MyWebResponseExceptionTranslator());
+        resources.authenticationEntryPoint(authenticationEntryPoint);
     }
 
     @Override
@@ -40,4 +46,5 @@ public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter
     public TokenStore tokenStore() {
         return new RedisTokenStore(redisTemplate.getConnectionFactory());
     }
+
 }

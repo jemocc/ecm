@@ -2,6 +2,7 @@ package org.cc.fileserver.Server.impl;
 
 import org.apache.logging.log4j.core.util.Assert;
 import org.cc.common.component.DistributeSynchronized;
+import org.cc.common.model.Page;
 import org.cc.common.utils.PublicUtil;
 import org.cc.common.config.ThreadPool;
 import org.cc.common.model.Pageable;
@@ -55,15 +56,16 @@ public class FileServiceImpl implements FileService {
         Assert.requireNonEmpty(v, "video can not be found");
         List<CacheFile> r = Collections.singletonList(v);
         log.info("begin to down video，with data:\n{}", JsonUtil.bean2Json_FN(r));
-        DownVideosTask task = new DownVideosTask(r, "update video set uri = ?,total_time = ? where id = ?");
+        DownVideosTask task = new DownVideosTask(r, "update video set type=?,uri=?,total_time=?,remark2=uri where id=?");
         ThreadPool.submit(task);
         return 1;
     }
 
     @Override
-    public void cacheCover() {
-        Pageable pageable = Pageable.of(0, 20);
+    public void cacheCover(int p) {
+        Pageable pageable = Pageable.ofPage(p++, 100);
         List<CacheFile> r = videoDao.queryAllWithoutCacheCover(pageable).stream().map(i -> {
+//            i.setCoverUri(i.getCoverUri().replaceAll("\\.com/?", ".com/"));
             i.setUri(i.getCoverUri());
             return (CacheFile) i;
         }).collect(Collectors.toList());
@@ -71,6 +73,7 @@ public class FileServiceImpl implements FileService {
         if (r.size() > 0) {
             DownFilesTask task = new DownFilesTask(r, "update video set cover_uri = ? where id = ?");
             ThreadPool.submit(task);
+            cacheCover(p);
         }
     }
 
@@ -81,5 +84,10 @@ public class FileServiceImpl implements FileService {
         log.info("exec test lock start.");
         PublicUtil.sleep(time == null ? 5000 : time);
         log.info("exec test lock end.");
+    }
+
+    @Override
+    public Page<Video> queryAllVideo(Pageable pageable) {
+        return videoDao.queryAll(pageable);
     }
 }

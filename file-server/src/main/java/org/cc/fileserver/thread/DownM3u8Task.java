@@ -106,6 +106,7 @@ public class DownM3u8Task extends DownFileTask {
                     e.printStackTrace();
                 }
             });
+            file.setType("mp4");
             file.setFormType(FileFormType.LOCAL);
             file.setUri(localPath);
             log.info("文件[{}-{}]下载成功", file.getId(), file.getName());

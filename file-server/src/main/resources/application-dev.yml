@@ -37,7 +37,7 @@ spring:
 #            client-id: 9c4a5a9082295648aa10
 #            client-secret: a330378686ba9231a564115b36486c238f5d773d
 self-config:
-  local-file-path: D:\file_local
+  local-file-path: D:\file_local\static
 logging:
   level:
-    org.springframework.jdbc.core: debug
+    org.springframework.jdbc.core.JdbcTemplate: debug

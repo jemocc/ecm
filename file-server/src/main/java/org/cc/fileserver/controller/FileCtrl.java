@@ -1,5 +1,9 @@
 package org.cc.fileserver.controller;
 
+import org.cc.common.component.FlowTrack;
+import org.cc.common.exception.GlobalException;
+import org.cc.common.model.Page;
+import org.cc.common.model.Pageable;
 import org.cc.common.model.RspResult;
 import org.cc.fileserver.Server.FileService;
 import org.cc.fileserver.entity.Video;
@@ -27,15 +31,25 @@ public class FileCtrl {
         return RspResult.ok(i);
     }
 
+    @GetMapping("/api/video-query-all")
+    public RspResult<Page<Video>> getAllVideo(Pageable pageable) {
+        Page<Video> files = fileService.queryAllVideo(pageable);
+        return RspResult.ok(files);
+    }
+
     @GetMapping("/pr/cache-cover")
     public RspResult<Void> cacheCover() {
-        fileService.cacheCover();
+        fileService.cacheCover(0);
         return RspResult.ok(null);
     }
 
     @GetMapping("/pr/test-lock")
-    public RspResult<Void> testLock(@RequestParam Integer time) {
+    @FlowTrack(value = "测试LOCK", isLogInput = true, isLogOutput = true)
+    public RspResult<Integer> testLock(@RequestParam Integer time, @RequestParam Integer inArgs) {
+        if (time == 2000) {
+            throw new GlobalException(501, "测试异常");
+        }
         fileService.testLock(time);
-        return RspResult.ok(null);
+        return RspResult.ok(1);
     }
 }

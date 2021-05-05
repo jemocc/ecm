@@ -2,6 +2,9 @@ package org.cc.common.model;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Getter;
+import lombok.Setter;
+import org.cc.common.utils.JsonUtil;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,6 +23,8 @@ import java.util.Objects;
  * )ENGINE=InnoDB DEFAULT CHARSET=utf8;
  * ALTER TABLE ua.users ADD UNIQUE INDEX (username);
  */
+@Setter
+@Getter
 @ApiModel(value = "用户", description = "系统基础用户映射实体")
 public class User implements UserDetails, Serializable {
 
@@ -69,47 +74,9 @@ public class User implements UserDetails, Serializable {
         return this.username;
     }
 
-    public Integer getUid() {
-        return id;
-    }
-
-    public void setUid(Integer uid) {
-        this.id = uid;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public Integer getStatus() {
-        return status;
-    }
-
-    public void setStatus(Integer status) {
-        this.status = status;
-    }
-
-    public String getRoles() {
-        return roles;
-    }
-
-    public void setRoles(String roles) {
-        this.roles = roles;
-    }
-
     @Override
     public String toString() {
-        return "User{" +
-                "id=" + id +
-                ", username='" + username + '\'' +
-                ", password='" + password + '\'' +
-                ", status=" + status +
-                ", roles='" + roles + '\'' +
-                '}';
+        return JsonUtil.bean2Json(this);
     }
 
     @Override
