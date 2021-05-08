@@ -19,4 +19,8 @@ dubbo:
   cloud:
     subscribed-services: ua
 self-config:
-#  open-verify-code-check: true
+  down-file-part-max-size: 2097152
+  down-file-part-max-num: 10
+  down-file-connect-timeout: 3000
+  down-file-read-timeout: 3000
+  down-file-max-retry: 10

@@ -252,8 +252,7 @@ public class HttpFileHelper {
 
         private void sendMessage() {
             JsonObject object = new JsonObject();
-            object.addProperty("fid", helper.uri.replaceAll("^.*/([^/]*)$", "$1") +
-                    (helper.rangeNo == null ? "" : "_" + helper.rangeNo));
+            object.addProperty("fn", helper.uri.replaceAll("^.*/([^/]*)$", "$1"));
             object.addProperty("tcl", tcl);
             object.addProperty("hcl", hcl);
             EventMessage<JsonObject> msg = new EventMessage<>(EventMessageType.FILE_DOWN_WATCH, object);

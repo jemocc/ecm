@@ -7,6 +7,8 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
+import java.util.Objects;
+
 @Component
 public class Profile implements ApplicationContextAware {
     private static ApplicationContext context;
@@ -24,4 +26,19 @@ public class Profile implements ApplicationContextAware {
         return config.getLocalFilePath();
     }
 
+    public static Integer getDownFilePartMaxSize() { return Objects.requireNonNullElse(config.getDownFilePartMaxSize(), 2097152); }
+
+    public static Integer getDownFilePartMaxNum() { return Objects.requireNonNullElse(config.getDownFilePartMaxNum(), 10); }
+
+    public static Integer getDownFileConnectTimeout() {
+        return Objects.requireNonNullElse(config.getDownFileConnectTimeout(), 3000);
+    }
+
+    public static Integer getDownFileReadTimeout() {
+        return Objects.requireNonNullElse(config.getDownFileReadTimeout(), 3000);
+    }
+
+    public static Integer getDownFileMaxRetry() {
+        return Objects.requireNonNullElse(config.getDownFileMaxRetry(), 10);
+    }
 }

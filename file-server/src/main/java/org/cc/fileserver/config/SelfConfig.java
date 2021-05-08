@@ -11,5 +11,10 @@ import org.springframework.stereotype.Component;
 @Getter
 public class SelfConfig {
     private String localFilePath;
+    private Integer downFilePartMaxSize;
+    private Integer downFilePartMaxNum;
+    private Integer downFileConnectTimeout;
+    private Integer downFileReadTimeout;
+    private Integer downFileMaxRetry;
 
 }
