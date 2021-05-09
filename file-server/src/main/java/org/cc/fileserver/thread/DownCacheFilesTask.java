@@ -38,6 +38,7 @@ public class DownCacheFilesTask implements Runnable{
 
     @Override
     public void run() {
+        FileDownloadWatch.load();
         CompletableFuture<?>[] futures = new CompletableFuture[files.size()];
         for (int i = 0; i < files.size(); i++) {
             CompletableFuture<?> future = CompletableFuture.runAsync(new DownCacheFileTask(files.get(i)), ThreadPool.getExecutor());

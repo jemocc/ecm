@@ -63,7 +63,7 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public void cacheCover(int p) {
-        Pageable pageable = Pageable.ofPage(p++, 1);
+        Pageable pageable = Pageable.ofPage(p++, 100);
         List<CacheFile> r = videoDao.queryAllWithoutCacheCover(pageable).stream().map(i -> {
 //            i.setCoverUri(i.getCoverUri().replaceAll("\\.com/?", ".com/"));
             i.setUri(i.getCoverUri());
@@ -71,10 +71,10 @@ public class FileServiceImpl implements FileService {
         }).collect(Collectors.toList());
 //        log.info("begin to down cover, with data:\n{}", JsonUtil.bean2Json_FN(r));
         if (r.size() > 0) {
-            DownCacheFilesTask tasks = new DownCacheFilesTask(r, "update video set cover_uri = ? where id = ?",
+            DownCacheFilesTask tasks = new DownCacheFilesTask(r, "update video set remark2 = cover_uri,cover_uri = ? where id = ?",
                     f -> new Object[]{f.getUri(), f.getId()});
             ThreadPool.submit(tasks);
-//            cacheCover(p);
+            cacheCover(p);
         }
     }
 

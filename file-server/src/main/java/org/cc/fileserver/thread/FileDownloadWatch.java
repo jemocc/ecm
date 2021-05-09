@@ -1,5 +1,6 @@
 package org.cc.fileserver.thread;
 
+import org.apache.dubbo.common.utils.ConcurrentHashSet;
 import org.cc.common.component.WSService;
 import org.cc.common.config.ThreadPool;
 import org.cc.common.model.EventMessage;
@@ -9,43 +10,41 @@ import org.cc.fileserver.model.FileDownProcess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class FileDownloadWatch implements Runnable {
-    private final Logger log = LoggerFactory.getLogger(FileDownloadWatch.class);
-    private List<FileDownProcess> processes = new ArrayList<>();
+    private static final Logger log = LoggerFactory.getLogger(FileDownloadWatch.class);
+    private static Set<FileDownProcess> processes = new ConcurrentHashSet<>();
 
-    private FileDownloadWatch() {
-        ThreadPool.submit(this);
+    static {
+        FileDownloadWatch watch = new FileDownloadWatch();
+        ThreadPool.submit(watch);
     }
 
-    static class Inner {
-        private static final FileDownloadWatch fileDownloadWatch = new FileDownloadWatch();
-    }
+    private FileDownloadWatch() {}
 
-    public static void addProcess(FileDownProcess process) {
-        synchronized (FileDownloadWatch.class) {
-            Inner.fileDownloadWatch.processes.add(process);
-            FileDownloadWatch.class.notify();
-        }
+    public static void load() {}
+
+    public synchronized static void addProcess(FileDownProcess process) {
+        processes.add(process);
+        FileDownloadWatch.class.notify();
     }
 
     @Override
     public void run() {
         log.info("file down watch started.");
-        synchronized (FileDownloadWatch.class) {
-            while (true) {
+        while (true) {
+            synchronized (FileDownloadWatch.class) {
                 try {
+                    long start = System.currentTimeMillis();
+                    EventMessage<Set<FileDownProcess>> msg = new EventMessage<>(EventMessageType.FILE_DOWN_WATCH, processes);
+                    WSService.sendMessageToWatcher(msg);
+                    processes = processes.stream().filter(FileDownProcess::isNotFinished).collect(Collectors.toSet());
                     if (processes.size() == 0)
                         FileDownloadWatch.class.wait();
-                    long start = System.currentTimeMillis();
-                    List<FileDownProcess> notFinished = processes.stream().filter(FileDownProcess::isNotFinished).collect(Collectors.toList());
-                    EventMessage<List<FileDownProcess>> msg = new EventMessage<>(EventMessageType.FILE_DOWN_WATCH, processes);
-                    WSService.sendMessageToWatcher(msg);
-                    processes = notFinished;
-                    PublicUtil.wait(start, 1000L);
+                    else
+                        PublicUtil.wait(FileDownloadWatch.class, start, 1000L);
                 } catch (Exception e) {
                     e.printStackTrace();
                     log.info("file down watch stop, with ex: {}", e.getMessage());

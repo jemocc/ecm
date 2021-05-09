@@ -26,10 +26,19 @@ public class PublicUtil {
         }
     }
 
-    public static void wait(long start, long waitTotalTime) {
+    public static void sleep(long start, long waitTotalTime) {
         long sleep = waitTotalTime - (System.currentTimeMillis() - start);
         if (sleep > 0) {
             sleep(sleep);
+        }
+    }
+
+    public static void wait(Object obj, long start, long waitTotalTime) {
+        try {
+            long wait = waitTotalTime - (System.currentTimeMillis() - start);
+            obj.wait(wait);
+        } catch (InterruptedException e) {
+            throw new RuntimeException("线程中断");
         }
     }
 

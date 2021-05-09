@@ -108,6 +108,7 @@ public class HttpDownFileHelper {
             } else {
                 transToData();
             }
+            return;
         } catch (SSLException | SocketTimeoutException e) {
             log.info("connect [{}] failure, ec: {}", uri, retry);
         } catch (ReadTimeoutException e) {
@@ -128,7 +129,6 @@ public class HttpDownFileHelper {
     }
 
     public void close() {
-        log.info("close conn of [{}]", uri);
         this.conn.disconnect();
         this.data = null;
     }
@@ -176,7 +176,6 @@ public class HttpDownFileHelper {
     }
 
     private void readData(OutputStream os) throws IOException {
-        log.info("insert read data");
         try (
                 BufferedInputStream bis = new BufferedInputStream(conn.getInputStream())
         ) {
@@ -185,7 +184,7 @@ public class HttpDownFileHelper {
                 if (process != null)
                     process.setTbc(contentSize);
             }
-            byte[] b = new byte[1024 * 1024];
+            byte[] b = new byte[20 * 1024];
             int len;
             while ((len = read(bis, b, 0)) != -1) {
                 os.write(b, 0, len);

@@ -11,6 +11,12 @@ spring:
   redis:
     host: 47.108.61.234
     timeout: PT30M
+    lettuce:
+      pool:
+        max-active: 500
+        max-wait: 500
+        max-idle: 500
+        min-idle: 0
     redisson:
       singleServerConfig:
         address: "redis://47.108.61.234:6379"

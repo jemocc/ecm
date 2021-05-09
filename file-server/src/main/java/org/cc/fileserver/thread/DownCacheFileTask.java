@@ -68,7 +68,7 @@ public class DownCacheFileTask implements Runnable{
         }
     }
 
-    protected void partDownFile() throws FileNotFoundException {
+    protected void partDownFile() {
         int filePartMaxNum = Profile.getDownFilePartMaxNum();
         int filePartMaxSize = Profile.getDownFilePartMaxSize();
         int partCount = (int) Math.ceil((float) contentSize / filePartMaxSize);
@@ -92,19 +92,17 @@ public class DownCacheFileTask implements Runnable{
     }
 
     protected synchronized void writeDataToFile(List<HttpDownFileHelper> helpers, boolean end) {
-        CompletableFuture.runAsync(() -> {
-            helpers.forEach(i -> {
-                try {
-                    os.write(i.getData());
-                    i.close();
-                } catch (IOException e) {
-                    log.error("down ex: ", e);
-                    PublicUtil.close(os);
-                    throw new GlobalException(501, "open local file stream failure.");
-                }
-            });
-            if (end)
+        helpers.forEach(i -> {
+            try {
+                os.write(i.getData());
+                i.close();
+            } catch (IOException e) {
+                log.error("down ex: ", e);
                 PublicUtil.close(os);
+                throw new GlobalException(501, "open local file stream failure.");
+            }
         });
+        if (end)
+            PublicUtil.close(os);
     }
 }
