@@ -39,7 +39,7 @@ public class FileDownloadWatch implements Runnable {
             while (true) {
                 try {
                     if (processes.size() == 0)
-                        wait();
+                        FileDownloadWatch.class.wait();
                     long start = System.currentTimeMillis();
                     List<FileDownProcess> notFinished = processes.stream().filter(FileDownProcess::isNotFinished).collect(Collectors.toList());
                     EventMessage<List<FileDownProcess>> msg = new EventMessage<>(EventMessageType.FILE_DOWN_WATCH, processes);
@@ -47,6 +47,7 @@ public class FileDownloadWatch implements Runnable {
                     processes = notFinished;
                     PublicUtil.wait(start, 1000L);
                 } catch (Exception e) {
+                    e.printStackTrace();
                     log.info("file down watch stop, with ex: {}", e.getMessage());
                     break;
                 }

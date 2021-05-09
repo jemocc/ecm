@@ -1,7 +1,7 @@
 package org.cc.common.component;
 
+import com.alibaba.nacos.common.utils.ConcurrentHashSet;
 import com.google.gson.reflect.TypeToken;
-import org.apache.dubbo.common.utils.ConcurrentHashSet;
 import org.cc.common.config.ThreadPool;
 import org.cc.common.model.EventMessage;
 import org.cc.common.pojo.EventMessageType;
@@ -119,7 +119,6 @@ public class WSService implements ApplicationContextAware {
 
     @Override
     public void setApplicationContext(@NonNull ApplicationContext applicationContext) throws BeansException {
-        log.info("设置application context");
         WSService.applicationContext = applicationContext;
     }
 

@@ -2,16 +2,20 @@ package org.cc.fileserver.model;
 
 import io.netty.handler.timeout.ReadTimeoutException;
 import org.cc.common.exception.GlobalException;
+import org.cc.common.utils.PublicUtil;
+import org.cc.fileserver.utils.FileUtil;
 import org.cc.fileserver.utils.HttpUtil;
-import org.cc.fileserver.utils.PublicUtil_FS;
+import org.cc.fileserver.utils.M3U8Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.crypto.Cipher;
 import javax.net.ssl.SSLException;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -22,10 +26,10 @@ import java.util.Objects;
  * @ModifyRecords: v1.0 new
  */
 public class HttpDownFileHelper {
-    private final Logger log = LoggerFactory.getLogger(HttpFileHelper.class);
+    private final Logger log = LoggerFactory.getLogger(HttpDownFileHelper.class);
     private String uri;
     private FileDownProcess process;
-    private File localFile;
+    private OutputStream localFileOS;
     //down file part
     private int rangeNo = 0;
     private Integer rangeStart;
@@ -35,13 +39,18 @@ public class HttpDownFileHelper {
     private int maxRetry;
     private int connectionTimeOut;
     private int readTimeOut;
-    HttpURLConnection conn;
+    private HttpURLConnection conn;
     //down file result
-    private String uriDomain;
     private int contentSize;
     private String fileType;
     private int dbc = 0;
     private byte[] data;
+    //m3u8
+    private boolean isM3U8 = false;
+    private String uriDomain;
+    private int totalTime;
+    private List<String> partUri;
+    private Cipher cipher;
 
     public static HttpDownFileHelper init(String uri) {
         HttpDownFileHelper helper = new HttpDownFileHelper();
@@ -49,6 +58,8 @@ public class HttpDownFileHelper {
         helper.maxRetry = Profile.getDownFileMaxRetry();
         helper.connectionTimeOut = Profile.getDownFileConnectTimeout();
         helper.readTimeOut = Profile.getDownFileReadTimeout();
+        if (uri.endsWith(".m3u8"))
+            helper.isM3U8 = true;
         return helper;
     }
 
@@ -64,10 +75,8 @@ public class HttpDownFileHelper {
         return this;
     }
 
-    public HttpDownFileHelper localUri(String localUri) {
-        this.localFile = new File(localUri);
-        if (!this.localFile.exists())
-            PublicUtil_FS.createFile(this.localFile);
+    public HttpDownFileHelper localFile(OutputStream localFileOS) {
+        this.localFileOS = localFileOS;
         return this;
     }
 
@@ -94,7 +103,7 @@ public class HttpDownFileHelper {
 
     public void down() {
         try {
-            if (localFile != null) {
+            if (localFileOS != null) {
                 transToFile();
             } else {
                 transToData();
@@ -107,23 +116,21 @@ public class HttpDownFileHelper {
           throw e;
         } catch (Exception e) {
             log.error("down ex, ec: {}", retry, e);
-            if (localFile != null)
-                PublicUtil_FS.deleteFile(localFile);
             throw new GlobalException(501, "request remote file [" + uri + "] failure.");
         }
         if (retry < maxRetry) {
             retry++;
-            process.dbcAdd(-dbc);
+            process.dbcAdd(isM3U8 ? -1 : -dbc);
             down();
         } else {
-            if (localFile != null)
-                PublicUtil_FS.deleteFile(localFile);
             throw new GlobalException(501, "request remote file [" + uri + "] failure.");
         }
     }
 
     public void close() {
+        log.info("close conn of [{}]", uri);
         this.conn.disconnect();
+        this.data = null;
     }
 
     private HttpDownFileHelper request_0() throws IOException {
@@ -140,15 +147,25 @@ public class HttpDownFileHelper {
         String ct = conn.getHeaderField("Content-Type");
         if (ct == null)
             HttpUtil.printHeaders(conn);
-        fileType = HttpUtil.getFileType(ct);
+        fileType = FileUtil.getFileType(ct);
+        log.info("rang {}-{}, size: {}", rangeStart, rangeEnd, contentSize);
+        if (isM3U8) {
+            down();
+            M3U8Util.readM3U8FileData(this);
+            contentSize = partUri.size();
+            fileType = "mp4";
+            close();
+        }
         return this;
     }
 
     private void transToFile() throws Exception {
         try (
-                BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(this.localFile))
+                BufferedOutputStream bos = new BufferedOutputStream(localFileOS)
         ){
             readData(bos);
+            PublicUtil.close(bos);
+            PublicUtil.close(localFileOS);
         }
     }
 
@@ -159,6 +176,7 @@ public class HttpDownFileHelper {
     }
 
     private void readData(OutputStream os) throws IOException {
+        log.info("insert read data");
         try (
                 BufferedInputStream bis = new BufferedInputStream(conn.getInputStream())
         ) {
@@ -172,11 +190,13 @@ public class HttpDownFileHelper {
             while ((len = read(bis, b, 0)) != -1) {
                 os.write(b, 0, len);
                 dbc += len;
-                if (process != null)
+                if (process != null && !isM3U8)
                     process.dbcAdd(len);
             }
         }
-        log.info("down remote file [{}_{}] success.", process == null ? uri : process.getName(), rangeNo);
+        if (isM3U8)
+            process.dbcAdd(1);
+        log.info("down remote file [{}_{}] success.", process == null ? uri : process.getId(), rangeNo);
     }
 
     private int read(InputStream is, byte[] tbs, int t) throws IOException {
@@ -204,5 +224,37 @@ public class HttpDownFileHelper {
 
     public byte[] getData() {
         return data;
+    }
+
+    public int getTotalTime() {
+        return totalTime;
+    }
+
+    public int getDbc() {
+        return dbc;
+    }
+
+    public boolean isM3U8() {
+        return isM3U8;
+    }
+
+    public void setTotalTime(int totalTime) {
+        this.totalTime = totalTime;
+    }
+
+    public void setCipher(Cipher cipher) {
+        this.cipher = cipher;
+    }
+
+    public Cipher getCipher() {
+        return cipher;
+    }
+
+    public void setPartUri(List<String> partUri) {
+        this.partUri = partUri;
+    }
+
+    public List<String> getPartUri() {
+        return partUri;
     }
 }

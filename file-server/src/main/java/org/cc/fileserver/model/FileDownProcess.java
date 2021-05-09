@@ -14,6 +14,7 @@ public class FileDownProcess implements Serializable {
     private final String name;
     private int tbc;
     private int dbc = 0;
+    private boolean failure = false;
 
     public FileDownProcess(int id, String name, int tbc) {
         this.id = id;
@@ -22,7 +23,7 @@ public class FileDownProcess implements Serializable {
     }
 
     public boolean isNotFinished() {
-        return tbc > dbc;
+        return tbc > dbc && !failure;
     }
 
     public void setTbc(int tbc) {
@@ -41,4 +42,7 @@ public class FileDownProcess implements Serializable {
         return name;
     }
 
+    public void failure() {
+        this.failure = true;
+    }
 }

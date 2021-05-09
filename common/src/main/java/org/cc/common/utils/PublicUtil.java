@@ -1,5 +1,7 @@
 package org.cc.common.utils;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -28,6 +30,15 @@ public class PublicUtil {
         long sleep = waitTotalTime - (System.currentTimeMillis() - start);
         if (sleep > 0) {
             sleep(sleep);
+        }
+    }
+
+    public static void close(OutputStream os) {
+        try {
+            if (os != null)
+                os.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

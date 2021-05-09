@@ -38,6 +38,7 @@ public class FileCtrl {
     }
 
     @GetMapping("/pr/cache-cover")
+    @FlowTrack("缓存视频封面")
     public RspResult<Void> cacheCover() {
         fileService.cacheCover(0);
         return RspResult.ok(null);

@@ -2,20 +2,17 @@ package org.cc.fileserver.thread;
 
 import org.cc.common.config.ThreadPool;
 import org.cc.common.exception.GlobalException;
+import org.cc.common.utils.PublicUtil;
 import org.cc.fileserver.entity.CacheFile;
+import org.cc.fileserver.entity.enums.FileFormType;
 import org.cc.fileserver.model.FileDownProcess;
 import org.cc.fileserver.model.HttpDownFileHelper;
 import org.cc.fileserver.model.Profile;
 import org.cc.fileserver.utils.FileUtil;
-import org.cc.fileserver.utils.HttpUtil;
-import org.cc.fileserver.utils.PublicUtil_FS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -29,8 +26,10 @@ import java.util.concurrent.CompletableFuture;
  */
 public class DownCacheFileTask implements Runnable{
     private final Logger log = LoggerFactory.getLogger(DownCacheFileTask.class);
-    private final CacheFile file;
-    private OutputStream os;
+    protected final CacheFile file;
+    protected FileDownProcess process;
+    protected OutputStream os;
+    protected int contentSize;
 
     public DownCacheFileTask(CacheFile file) {
         this.file = file;
@@ -40,52 +39,72 @@ public class DownCacheFileTask implements Runnable{
     public void run() {
         HttpDownFileHelper helper = HttpDownFileHelper.init(file.getUri()).request();
         String localUri = FileUtil.getLocalUri(helper.getFileType());
-        int contentSize = helper.getContentSize();
-        FileDownProcess process = new FileDownProcess(file.getId(), file.getName(), contentSize);
-        int filePartMaxSize = Profile.getDownFilePartMaxSize();
-        int filePartMaxNum = Profile.getDownFilePartMaxNum();
-        if (contentSize > filePartMaxSize * 2) {  //超过两倍则进行分片下载
-            File localFile = new File(FileUtil.getFullLocalUri(localUri));
-            if (!localFile.exists())
-                PublicUtil_FS.createFile(localFile);
-            try {
-                os = new FileOutputStream(localFile);
-            } catch (IOException e) {
-                log.error("down ex: ", e);
-                throw new GlobalException(501, "open local file stream [" + localFile.getAbsolutePath() + "] failure.");
-            }
+        File localFile = new File(FileUtil.getFullLocalUri(localUri));
+        if (!localFile.exists())
+            FileUtil.createFile(localFile);
+        os = FileUtil.openOS(localFile);
 
-            helper.close();
-            int partCount = (int) Math.ceil((float) helper.getContentSize() / filePartMaxSize);
-            int rangStart = 0;
-            for (int i = 0; i < partCount; i += filePartMaxNum) {
-                List<HttpDownFileHelper> helpers = new ArrayList<>(filePartMaxNum);
-                List<CompletableFuture<?>> futures = new ArrayList<>(filePartMaxNum);
-                for (int j = 0; j < filePartMaxNum; j++) {
-                    int randEnd = (rangStart + filePartMaxSize) > contentSize ? (contentSize - rangStart) : (rangStart + filePartMaxSize);
-                    HttpDownFileHelper th = HttpDownFileHelper.init(file.getUri()).range(j, rangStart, randEnd).watch(process);
-                    helpers.add(th);
-                    futures.add(CompletableFuture.runAsync(() -> helper.request().down(), ThreadPool.getExecutor()));
-                }
-                CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenRun(() -> {
-                    writeDataToFile(helpers);
-                });
+        contentSize = helper.getContentSize();
+        process = new FileDownProcess(file.getId(), file.getName(), contentSize);
+        FileDownloadWatch.addProcess(process);
+        try {
+            if (contentSize > Profile.getDownFilePartMaxSize() * 2) {  //超过两倍则进行分片下载
+                helper.close();
+                partDownFile();
+            } else if (helper.isM3U8()){
+                helper.close();
+            } else {    //直接下载
+                helper.localFile(os).watch(process).down();
             }
-            os.close();
-        } else {    //直接下载
-            helper.localUri(localUri).down();
+            file.setRemark2(file.getUri());
+            file.setUri(localUri);
+            file.setFormType(FileFormType.LOCAL);
+            file.setType(helper.getFileType());
+        } catch (Exception e) {
+            log.error("download file [{}] failure. ex: ", file.getId(), e);
+            process.failure();
+            PublicUtil.close(os);
+            FileUtil.deleteFile(localFile);
         }
     }
 
-    private synchronized void writeDataToFile(List<HttpDownFileHelper> helpers) {
-
-        helpers.forEach(i -> {
-            try {
-                os.write(i.getData());
-            } catch (IOException e) {
-                log.error("down ex: ", e);
-                throw new GlobalException(501, "open local file stream [" + localFile.getAbsolutePath() + "] failure.");
+    protected void partDownFile() throws FileNotFoundException {
+        int filePartMaxNum = Profile.getDownFilePartMaxNum();
+        int filePartMaxSize = Profile.getDownFilePartMaxSize();
+        int partCount = (int) Math.ceil((float) contentSize / filePartMaxSize);
+        int rangStart = 0;
+        for (int i = 0; i < partCount; i += filePartMaxNum) {
+            List<HttpDownFileHelper> helpers = new ArrayList<>(filePartMaxNum);
+            List<CompletableFuture<?>> futures = new ArrayList<>(filePartMaxNum);
+            for (int j = 0; j < filePartMaxNum; j++) {
+                int randEnd = Math.min(rangStart + filePartMaxSize, contentSize);
+                HttpDownFileHelper th = HttpDownFileHelper.init(file.getUri()).range(j, rangStart, randEnd).watch(process);
+                rangStart = randEnd + 1;
+                helpers.add(th);
+                futures.add(CompletableFuture.runAsync(() -> th.request().down(), ThreadPool.getExecutor()));
             }
+            final boolean isEnd = rangStart > contentSize;
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenRun(() -> {
+                writeDataToFile(helpers, isEnd);
+            });
+        }
+
+    }
+
+    protected synchronized void writeDataToFile(List<HttpDownFileHelper> helpers, boolean end) {
+        CompletableFuture.runAsync(() -> {
+            helpers.forEach(i -> {
+                try {
+                    os.write(i.getData());
+                    i.close();
+                } catch (IOException e) {
+                    log.error("down ex: ", e);
+                    PublicUtil.close(os);
+                    throw new GlobalException(501, "open local file stream failure.");
+                }
+            });
+            if (end)
+                PublicUtil.close(os);
         });
     }
 }

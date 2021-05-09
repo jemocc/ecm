@@ -1,6 +1,6 @@
 package org.cc.ua.controller;
 
-import com.alibaba.fastjson.JSONObject;
+import com.google.gson.JsonObject;
 import org.cc.common.model.RspResult;
 import org.cc.ua.utils.VerifyCodeUtil;
 import org.slf4j.Logger;
@@ -23,9 +23,9 @@ public class AuthCtrl {
     private PasswordEncoder passwordEncoder;
 
     @GetMapping("/oauth/code")
-    public RspResult<JSONObject> code(@RequestParam("code") String code) {
-        JSONObject result = new JSONObject(1);
-        result.put("code", code);
+    public RspResult<JsonObject> code(@RequestParam("code") String code) {
+        JsonObject result = new JsonObject();
+        result.addProperty("code", code);
         return RspResult.ok(result);
     }
 
@@ -39,9 +39,9 @@ public class AuthCtrl {
     }
 
     @GetMapping("/pr/password-encoder")
-    public RspResult<JSONObject> passwordEncode(@RequestParam String password) {
-        JSONObject result = new JSONObject(1);
-        result.put("password", passwordEncoder.encode(password));
+    public RspResult<JsonObject> passwordEncode(@RequestParam String password) {
+        JsonObject result = new JsonObject();
+        result.addProperty("password", passwordEncoder.encode(password));
         return RspResult.ok(result);
     }
 }
