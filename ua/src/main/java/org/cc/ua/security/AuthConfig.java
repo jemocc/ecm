@@ -47,7 +47,6 @@ public class AuthConfig {
                     .antMatchers("/api/**", "/oauth/authorize").authenticated()
             ;
         }
-
     }
 
     @Configuration

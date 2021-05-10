@@ -5,6 +5,7 @@ import org.cc.common.model.RspResult;
 import org.cc.ua.utils.VerifyCodeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,6 +40,7 @@ public class AuthCtrl {
     }
 
     @GetMapping("/pr/password-encoder")
+    @PreAuthorize("hasRole('ADMIN')")
     public RspResult<JsonObject> passwordEncode(@RequestParam String password) {
         JsonObject result = new JsonObject();
         result.addProperty("password", passwordEncoder.encode(password));

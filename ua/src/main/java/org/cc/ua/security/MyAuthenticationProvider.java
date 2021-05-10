@@ -1,6 +1,5 @@
 package org.cc.ua.security;
 
-import org.cc.ua.exception.VerificationCodeException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -29,7 +28,7 @@ public class MyAuthenticationProvider extends AbstractUserDetailsAuthenticationP
         if (isOpenVerifyCodeCheck) {
             MyWebAuthenticationDetails details = (MyWebAuthenticationDetails) authentication.getDetails();
             if (details.getSavedVerifyCode() == null || !details.getSavedVerifyCode().equals(details.getRequestVerifyCode())) {
-                throw new VerificationCodeException();
+                throw new BadCredentialsException("图形验证码验证失败");
             }
         }
         if (authentication.getCredentials() == null) {

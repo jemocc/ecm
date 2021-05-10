@@ -30,7 +30,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .anyRequest().permitAll()
                 .and()
             .formLogin()
-                .authenticationDetailsSource(new MyAuthenticationDetailsSource())
+//                .authenticationDetailsSource(new MyAuthenticationDetailsSource())
                 .loginPage("/index.html")
                 .loginProcessingUrl("/login").permitAll()
                 .successHandler(new MyAuthenticationSuccessHandler())
