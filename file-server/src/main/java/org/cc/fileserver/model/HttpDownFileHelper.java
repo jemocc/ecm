@@ -47,6 +47,7 @@ public class HttpDownFileHelper {
     private byte[] data;
     //m3u8
     private boolean isM3U8 = false;
+    private boolean isM3U8Part = false;
     private String uriDomain;
     private int totalTime;
     private List<String> partUri;
@@ -80,6 +81,11 @@ public class HttpDownFileHelper {
         return this;
     }
 
+    public HttpDownFileHelper m3u8Part() {
+        isM3U8Part = true;
+        return this;
+    }
+
     public HttpDownFileHelper request() {
         try {
             return request_0();
@@ -91,12 +97,14 @@ public class HttpDownFileHelper {
             throw e;
         } catch (Exception e) {
             log.error("down ex, ec: {}", retry, e);
+            process.failure();
             throw new GlobalException(501, "request remote file [" + uri + "] failure.");
         }
         if (retry < maxRetry) {
             retry++;
             return request();
         } else {
+            process.failure();
             throw new GlobalException(501, "request remote file [" + uri + "] failure.");
         }
     }
@@ -117,6 +125,7 @@ public class HttpDownFileHelper {
           throw e;
         } catch (Exception e) {
             log.error("down ex, ec: {}", retry, e);
+            process.failure();
             throw new GlobalException(501, "request remote file [" + uri + "] failure.");
         }
         if (retry < maxRetry) {
@@ -124,6 +133,7 @@ public class HttpDownFileHelper {
             process.dbcAdd(isM3U8 ? -1 : -dbc);
             down();
         } else {
+            process.failure();
             throw new GlobalException(501, "request remote file [" + uri + "] failure.");
         }
     }
@@ -145,7 +155,7 @@ public class HttpDownFileHelper {
         uriDomain = HttpUtil.getDomain(conn);
         contentSize = Integer.parseInt(Objects.requireNonNullElse(conn.getHeaderField("Content-Length"), "-1"));
         String ct = conn.getHeaderField("Content-Type");
-        if (ct == null)
+        if (ct == null && !isM3U8 && !isM3U8Part)
             HttpUtil.printHeaders(conn);
         fileType = FileUtil.getFileType(ct);
         log.info("rang {}-{}, size: {}", rangeStart, rangeEnd, contentSize);
@@ -154,7 +164,6 @@ public class HttpDownFileHelper {
             M3U8Util.readM3U8FileData(this);
             contentSize = partUri.size();
             fileType = "mp4";
-            close();
         }
         return this;
     }
@@ -164,8 +173,6 @@ public class HttpDownFileHelper {
                 BufferedOutputStream bos = new BufferedOutputStream(localFileOS)
         ){
             readData(bos);
-            PublicUtil.close(bos);
-            PublicUtil.close(localFileOS);
         }
     }
 
@@ -179,7 +186,7 @@ public class HttpDownFileHelper {
         try (
                 BufferedInputStream bis = new BufferedInputStream(conn.getInputStream())
         ) {
-            if (contentSize == -1) {
+            if (contentSize == -1 && !isM3U8 && !isM3U8Part) {
                 contentSize = bis.available();
                 if (process != null)
                     process.setTbc(contentSize);
@@ -189,13 +196,13 @@ public class HttpDownFileHelper {
             while ((len = read(bis, b, 0)) != -1) {
                 os.write(b, 0, len);
                 dbc += len;
-                if (process != null && !isM3U8)
+                if (process != null && !isM3U8 && !isM3U8Part)
                     process.dbcAdd(len);
             }
         }
-        if (isM3U8)
+        if (isM3U8Part)
             process.dbcAdd(1);
-        log.info("down remote file [{}_{}] success.", process == null ? uri : process.getId(), rangeNo);
+        log.info("download part [{}_{}] success.", uri, rangeNo);
     }
 
     private int read(InputStream is, byte[] tbs, int t) throws IOException {

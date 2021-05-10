@@ -34,15 +34,11 @@ public class FileDownProcess implements Serializable {
         this.dbc += dbc;
     }
 
-    public int getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
     public void failure() {
         this.failure = true;
+    }
+
+    public boolean isFailure() {
+        return failure;
     }
 }
