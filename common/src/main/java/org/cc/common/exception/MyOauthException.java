@@ -1,7 +1,6 @@
-package org.cc.common.model;
+package org.cc.common.exception;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import org.cc.common.exception.UserOAuth2ExceptionSerializer;
 import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
 
 @JsonSerialize(using = UserOAuth2ExceptionSerializer.class)

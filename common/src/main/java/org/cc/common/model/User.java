@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -38,6 +39,8 @@ public class User implements UserDetails, Serializable {
     private Integer status = 0;
     @ApiModelProperty("用户角色，多角色以英文逗号分隔")
     private String roles;
+    @ApiModelProperty("用户权限")
+    private List<Integer> permissions;
 
     @Override
     public boolean isAccountNonExpired() {
@@ -90,5 +93,9 @@ public class User implements UserDetails, Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(username);
+    }
+
+    public void setPermissions(List<Integer> permissions) {
+        this.permissions = permissions;
     }
 }

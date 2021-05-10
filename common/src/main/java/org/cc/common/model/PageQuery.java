@@ -18,7 +18,7 @@ public class PageQuery {
 
     public <T> Page<T> exec(JdbcTemplate jdbcTemplate, Class<T> t) {
         String querySql = Pageable.warp(pageable, sql);
-        String countSql = sql.replaceAll("select (.*?(?=from))from", "select count(*) from");
+        String countSql = sql.replaceFirst("select (.*?(?=from))from", "select count(*) from");
         Integer c = jdbcTemplate.queryForObject(countSql, Integer.class);
         assert c != null;
         List<T> data = jdbcTemplate.query(querySql, new BeanPropertyRowMapper<>(t));

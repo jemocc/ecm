@@ -3,7 +3,6 @@ package org.cc.common.exception;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import org.cc.common.model.MyOauthException;
 
 import java.io.IOException;
 

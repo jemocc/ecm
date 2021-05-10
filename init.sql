@@ -4,11 +4,37 @@ create table ua.`users`(
     `username` varchar(50) unique not null comment '用户账号名称',
     `password` char(68) comment '用户密码',
     `status` int not null default 0 comment '用户状态 0-正常',
-    `roles`   varchar(200) comment '用户角色，多角色以英文逗号分隔',
+    `role_ids`   varchar(200) comment '用户角色ID，多角色以英文逗号分隔',
     `last_used` timestamp comment '最后登录时间'
-)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-insert into ua.users (username, password, roles) values ('admin', '{bcrypt}$2a$10$2QciMhK4xHNk33LHZgDqjuixzIDoTVgjPgC9o/Xmr/yEcJxtQ8SRm', 'ROLE_ADMIN,ROLE_USER'),
-                                                        ('user', '{bcrypt}$2a$10$2QciMhK4xHNk33LHZgDqjuixzIDoTVgjPgC9o/Xmr/yEcJxtQ8SRm', 'ROLE_USER');
+) COMMENT '用户表' ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+insert into ua.users (username, password, role_ids) values ('admin', '{bcrypt}$2a$10$2QciMhK4xHNk33LHZgDqjuixzIDoTVgjPgC9o/Xmr/yEcJxtQ8SRm', '0,1'),
+                                                        ('user', '{bcrypt}$2a$10$2QciMhK4xHNk33LHZgDqjuixzIDoTVgjPgC9o/Xmr/yEcJxtQ8SRm', '1');
+
+drop table if exists ua.roles;
+create table ua.`roles`(
+    `id` int(11) not null primary key auto_increment comment '角色ID',
+    `name` varchar(32) unique not null comment '角色英文名称',
+    `desc` varchar(32) comment '角色中文名称',
+    `status` int not null default 0 comment '角色状态 0-正常',
+    `remark1` varchar(64) comment '备注'
+) COMMENT '平台角色表' ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+insert into ua.roles (name, desc, remark1) values ('ROLE_ADMIN', '系统管理员', '系统内置，禁止删除'), ('ROLE_USER', '普通用户', '系统内置，禁止删除');
+
+drop table if exists ua.permissions;
+create table ua.`permissions`(
+    `id` int(11) not null primary key auto_increment comment '权限ID',
+    `name` varchar(32) unique not null comment '权限英文名称',
+    `type` int not null comment '权限类型 0-菜单权限，1-功能权限',
+    `desc` varchar(32) comment '权限中文名称',
+    `route` varchar(32) comment '菜单路由',
+    `remark1` varchar(64) comment '备注'
+) COMMENT '权限表' ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+drop table if exists ua.role_to_permission;
+create table ua.`role_to_permission`(
+    `rid` int(11) not null comment '角色ID',
+    `pid` int(11) not null comment '权限ID',
+) COMMENT '角色权限关联表' ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 drop table if exists ua.oauth_client_details;
 create table ua.`oauth_client_details`(

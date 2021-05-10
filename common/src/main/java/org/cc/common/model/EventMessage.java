@@ -15,9 +15,6 @@ public class EventMessage<T> implements Serializable {
 
     private T data;
 
-    public EventMessage() {
-    }
-
     public EventMessage(EventMessageType wsMessageType, T data) {
         this.wsMessageType = wsMessageType;
         this.data = data;
