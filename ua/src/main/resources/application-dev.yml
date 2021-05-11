@@ -1,29 +1,17 @@
 spring:
-  devtools:
-    livereload:
-      enabled: true
-    restart:
-      enabled: true
   cloud:
     nacos:
       discovery:
         server-addr: 47.108.61.234:8848
+    stream:
+      rocketmq:
+        binder:
+          name-server:
   redis:
     host: 47.108.61.234
-    timeout: PT30M
-    lettuce:
-      pool:
-        max-active: 500
-        max-wait: 2
-        max-idle: 200
-        min-idle: 1
     redisson:
       singleServerConfig:
         address: redis://47.108.61.234:6379
-        database: 2
-      threads: 0
-      nettyThreads: 0
-      transportMode: NIO
   datasource:
     driver-class-name: org.mariadb.jdbc.Driver
     url: jdbc:mariadb://47.108.61.234:3306/ua

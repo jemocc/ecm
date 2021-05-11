@@ -14,6 +14,30 @@ spring:
     redis:
       repositories:
         enabled: false
+  cloud:
+    stream:
+      bindings:
+        output:
+          destination: ecm
+          content-type: application/json
+        input:
+          destination: ecm
+          content-type: application/json
+          group: ecm-ua-g
+  redis:
+    timeout: PT30M
+    lettuce:
+      pool:
+        max-active: 500
+        max-wait: 2
+        max-idle: 200
+        min-idle: 1
+    redisson:
+      singleServerConfig:
+        database: 2
+      threads: 0
+      nettyThreads: 0
+      transportMode: NIO
 dubbo:
   scan:
     base-packages: org.cc.ua.server
