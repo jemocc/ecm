@@ -16,6 +16,8 @@ import org.cc.fileserver.entity.enums.FileFormType;
 import org.cc.fileserver.thread.DownCacheFilesTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +39,7 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
+    @CacheEvict(value = "videos", allEntries = true)
     public int saveRemoteVideo(List<Video> videos) {
         log.info("请求保存远程文件[{}]个", videos.size());
         if (videos.size() == 0)
@@ -50,6 +53,7 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
+    @CacheEvict(value = "videos", allEntries = true)
     public int cacheVideo(Integer id) {
         Video v = videoDao.queryOne(id);
         Assert.requireNonEmpty(v, "video can not be found");
@@ -62,6 +66,7 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
+    @CacheEvict(value = "videos", allEntries = true)
     public void cacheCover(int p) {
         Pageable pageable = Pageable.ofPage(p++, 100);
         List<CacheFile> r = videoDao.queryAllWithoutCacheCover(pageable).stream().map(i -> {
@@ -88,6 +93,7 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
+    @Cacheable(value = "videos", key = "#pageable.page", condition = "#pageable.page < 5")
     public Page<Video> queryAllVideo(Pageable pageable) {
         return videoDao.queryAll(pageable);
     }

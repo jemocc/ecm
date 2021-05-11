@@ -37,6 +37,8 @@ public class User implements UserDetails, Serializable {
     private String password;
     @ApiModelProperty("用户状态 0-正常")
     private Integer status = 0;
+    @ApiModelProperty("用户角色ID，多角色以英文逗号分隔")
+    private String roleIds;
     @ApiModelProperty("用户角色，多角色以英文逗号分隔")
     private String roles;
     @ApiModelProperty("用户权限")

@@ -1,7 +1,6 @@
 package org.cc.ua.security;
 
 import org.cc.common.model.User;
-import org.cc.common.utils.PublicUtil;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -9,8 +8,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -24,14 +21,17 @@ public class UserService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String s) throws UsernameNotFoundException {
         String sql = "select * from users where u.username = ? and u.status = 0 limit 1";
+        User user = null;
         try {
-            User user = jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(User.class), s);
+            user = jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(User.class), s);
             assert user != null;
-            List<Integer> roleIds = PublicUtil.splitStr(user.getRoles(), ",", Integer.class);
-            String roleNames = jdbcTemplate.queryForObject("select group_concat(name) from roles where id in ?", new Object[]{roleIds}, String.class);
+            String sql2 = "select group_concat(name) from roles where find_set_in(id, ?)";
+            String roleNames = jdbcTemplate.queryForObject(sql2, new Object[]{user.getRoleIds()}, String.class);
             user.setRoles(roleNames);
             return user;
         } catch (EmptyResultDataAccessException e) {
+            if (user != null)
+                throw new UsernameNotFoundException("用户角色异常");
             throw new UsernameNotFoundException("用户不存在: " + s);
         }
     }
