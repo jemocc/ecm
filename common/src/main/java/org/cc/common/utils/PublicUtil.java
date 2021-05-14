@@ -16,16 +16,6 @@ import java.util.stream.Collectors;
 
 public class PublicUtil {
 
-    public static PreparedStatement prepare(Connection conn, String sql, Object[] args) throws SQLException {
-        PreparedStatement ps = conn.prepareStatement(sql);
-        if (args != null) {
-            for (int i = 0; i < args.length; i++) {
-                ps.setObject(i+1, args[i]);
-            }
-        }
-        return ps;
-    }
-
     public static void sleep(long time) {
         try {
             Thread.sleep(time);

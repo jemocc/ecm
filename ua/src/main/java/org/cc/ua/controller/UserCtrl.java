@@ -3,6 +3,8 @@ package org.cc.ua.controller;
 import org.cc.common.model.RspResult;
 import org.cc.common.utils.JsonUtil;
 import org.cc.common.model.User;
+import org.cc.common.utils.PlatformUtil;
+import org.cc.common.utils.PublicUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
@@ -19,12 +21,11 @@ public class UserCtrl {
 
     @GetMapping("/current-user")
     public RspResult<User> getCurrentUser() {
-        SecurityContext context = SecurityContextHolder.getContext();
-        Authentication authentication = context.getAuthentication();
-        User user = (User) authentication.getPrincipal();
-        user.setPassword(null);
+        User user = PlatformUtil.currentUser();
         log.info("用户：{}", JsonUtil.bean2Json_FN(user));
         return RspResult.ok(user);
     }
+
+
 
 }

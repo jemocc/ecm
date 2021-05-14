@@ -3,6 +3,7 @@ package org.cc.fileserver.dao.impl;
 import org.cc.common.model.Page;
 import org.cc.common.model.PageQuery;
 import org.cc.common.model.Pageable;
+import org.cc.common.utils.DBUtil;
 import org.cc.common.utils.PublicUtil;
 import org.cc.common.utils.SequenceGenerator;
 import org.cc.fileserver.dao.VideoDao;
@@ -33,9 +34,7 @@ public class VideoDaoImpl implements VideoDao {
         final Object[] args = new Object[]{
                 video.getName(),video.getType(),video.getUri(),video.getCreateAt(),video.getFormType().name(),video.getRemark1(),video.getRemark2(),video.getCoverUri()
         };
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-        jdbcTemplate.update(conn -> PublicUtil.prepare(conn, sql, args), keyHolder);
-        return Objects.requireNonNullElse(keyHolder.getKey(), -1).intValue();
+        return DBUtil.insertRId(jdbcTemplate, sql, args);
     }
 
     @Override

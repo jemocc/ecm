@@ -35,7 +35,7 @@ public class DistributeSynchronizedAop {
             lock.unlock();
             return result;
         } else {
-            throw new GlobalException(50101, "执行资源获取失败");
+            throw new GlobalException(50101, "获取执行资源失败，请稍后再试");
         }
     }
 

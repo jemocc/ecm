@@ -13,21 +13,26 @@ insert into ua.users (username, password, role_ids) values ('admin', '{bcrypt}$2
 drop table if exists ua.roles;
 create table ua.`roles`(
     `id` int(11) not null primary key auto_increment comment '角色ID',
+    `pid` int(11) not null '父角色ID',
+    `sort` int(11) not null '角色顺序',
+    `seq_no` varchar(32) not null comment '角色序号',
     `name` varchar(32) unique not null comment '角色英文名称',
     `desc` varchar(32) comment '角色中文名称',
     `status` int not null default 0 comment '角色状态 0-正常',
-    `remark1` varchar(64) comment '备注'
+    `remark1` varchar(64) comment '备注1'
 ) COMMENT '平台角色表' ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 insert into ua.roles (name, desc, remark1) values ('ROLE_ADMIN', '系统管理员', '系统内置，禁止删除'), ('ROLE_USER', '普通用户', '系统内置，禁止删除');
 
 drop table if exists ua.permissions;
 create table ua.`permissions`(
     `id` int(11) not null primary key auto_increment comment '权限ID',
+    `pid` int(11) not null '权限父ID',
+    `sort` int(11) not null '权限顺序',
     `name` varchar(32) unique not null comment '权限英文名称',
     `type` int not null comment '权限类型 0-菜单权限，1-功能权限',
-    `desc` varchar(32) comment '权限中文名称',
+    `desc` varchar(32) comment '权限中文描述',
     `route` varchar(32) comment '菜单路由',
-    `remark1` varchar(64) comment '备注'
+    `remark1` varchar(64) comment '备注1'
 ) COMMENT '权限表' ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 drop table if exists ua.role_to_permission;
