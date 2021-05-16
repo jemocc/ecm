@@ -16,6 +16,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 /**
  * @ClassName: DownCacheFileTask
@@ -29,6 +30,7 @@ public class DownCacheFileTask implements Runnable{
     protected final CacheFile file;
     protected FileDownProcess process;
     protected File localFile;
+    protected CacheFile tempFile = new CacheFile();
     protected OutputStream os;
     protected int contentSize;
 
@@ -53,7 +55,10 @@ public class DownCacheFileTask implements Runnable{
             } else {    //直接下载
                 helper.localFile(os).watch(process).down();
             }
-            success();
+            if (process.isFailure())
+                failure(null);
+            else
+                success();
         } catch (Exception e) {
             failure(e);
         }
@@ -65,14 +70,16 @@ public class DownCacheFileTask implements Runnable{
         if (!localFile.exists())
             FileUtil.createFile(localFile);
         os = FileUtil.openOS(localFile);
-        file.setType(fileType);
-        file.setUri(localUri);
+        tempFile.setType(fileType);
+        tempFile.setUri(localUri);
     }
 
     protected void success() {
         log.info("download file [{}] success.", file.getId());
         PublicUtil.close(os);
         file.setFormType(FileFormType.LOCAL);
+        file.setType(tempFile.getType());
+        file.setUri(tempFile.getUri());
     }
 
     protected void failure(Exception e) {
@@ -82,7 +89,7 @@ public class DownCacheFileTask implements Runnable{
         FileUtil.deleteFile(localFile);
     }
 
-    protected void partDownFile() {
+    protected void partDownFile() throws ExecutionException, InterruptedException {
         int filePartMaxNum = Profile.getDownFilePartMaxNum();
         int filePartMaxSize = Profile.getDownFilePartMaxSize();
         int partCount = (int) Math.ceil((float) contentSize / filePartMaxSize);
@@ -92,16 +99,22 @@ public class DownCacheFileTask implements Runnable{
             List<CompletableFuture<?>> futures = new ArrayList<>(filePartMaxNum);
             for (int j = 0; j < filePartMaxNum; j++) {
                 int randEnd = Math.min(rangStart + filePartMaxSize, contentSize);
-                HttpDownFileHelper th = HttpDownFileHelper.init(file.getUri()).range(j, rangStart, randEnd).watch(process);
+                HttpDownFileHelper th = HttpDownFileHelper.init(file.getUri()).range(i*filePartMaxNum + j, rangStart, randEnd).watch(process);
                 rangStart = randEnd + 1;
                 helpers.add(th);
                 futures.add(CompletableFuture.runAsync(() -> th.request().down(), ThreadPool.getExecutor()));
+                if (rangStart >= contentSize)
+                    break;
             }
-            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenRun(() -> {
-                if (process.isFailure())
-                    throw new GlobalException(501, "part down failure");
-                writeDataToFile(helpers);
-            });
+            try {
+                CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenRun(() -> {
+                    if (process.isFailure())
+                        throw new GlobalException(501, "part down failure");
+                    writeDataToFile(helpers);
+                }).get();
+            } catch (InterruptedException | ExecutionException e) {
+                throw e;
+            }
         }
 
     }

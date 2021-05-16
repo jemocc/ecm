@@ -1,7 +1,8 @@
 package org.cc.common.model;
 
-public class Pageable {
+import java.io.Serializable;
 
+public class Pageable implements Serializable {
     private Integer sid;
     private Integer page = 0;
     private Integer size = 20;
@@ -38,5 +39,13 @@ public class Pageable {
         } else {
             return sql + " where id > " + sid;
         }
+    }
+
+    public Integer getPage() {
+        return page;
+    }
+
+    public Integer getSize() {
+        return size;
     }
 }

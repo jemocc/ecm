@@ -1,8 +1,9 @@
 package org.cc.common.model;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class Page<T> {
+public class Page<T> implements Serializable {
     private Integer tc;
     private List<T> data;
 

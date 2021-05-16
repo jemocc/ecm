@@ -26,6 +26,4 @@ public class UserCtrl {
         return RspResult.ok(user);
     }
 
-
-
 }

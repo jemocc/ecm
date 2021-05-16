@@ -7,12 +7,13 @@ import lombok.Setter;
 import org.cc.common.utils.JsonUtil;
 import org.cc.fileserver.entity.enums.FileFormType;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Getter
 @Setter
 @ApiModel(value = "文件资源", description = "文件映射实体")
-public class CacheFile {
+public class CacheFile implements Serializable {
 
     @ApiModelProperty("文件ID")
     private Integer id;

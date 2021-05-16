@@ -20,12 +20,12 @@ public class UserService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String s) throws UsernameNotFoundException {
-        String sql = "select * from users where u.username = ? and u.status = 0 limit 1";
+        String sql = "select * from users u where u.username = ? and u.status = 0 limit 1";
         User user = null;
         try {
             user = jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(User.class), s);
             assert user != null;
-            String sql2 = "select group_concat(name) from roles where find_set_in(id, ?)";
+            String sql2 = "select group_concat(name) from roles where find_in_set(id, ?)";
             String roleNames = jdbcTemplate.queryForObject(sql2, new Object[]{user.getRoleIds()}, String.class);
             user.setRoles(roleNames);
             return user;

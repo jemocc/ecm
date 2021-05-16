@@ -158,7 +158,6 @@ public class HttpDownFileHelper {
         if (ct == null && !isM3U8 && !isM3U8Part)
             HttpUtil.printHeaders(conn);
         fileType = FileUtil.getFileType(ct);
-        log.info("rang {}-{}, size: {}", rangeStart, rangeEnd, contentSize);
         if (isM3U8) {
             down();
             M3U8Util.readM3U8FileData(this);
@@ -236,8 +235,8 @@ public class HttpDownFileHelper {
         return totalTime;
     }
 
-    public int getDbc() {
-        return dbc;
+    public int getRangeNo() {
+        return rangeNo;
     }
 
     public boolean isM3U8() {

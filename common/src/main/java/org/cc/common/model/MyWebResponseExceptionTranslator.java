@@ -18,10 +18,12 @@ public class MyWebResponseExceptionTranslator implements WebResponseExceptionTra
     public ResponseEntity<OAuth2Exception> translate(Exception e) {
         Throwable[] causeChain = this.throwableAnalyzer.determineCauseChain(e);
         Exception ase = (OAuth2Exception)this.throwableAnalyzer.getFirstThrowableOfType(OAuth2Exception.class, causeChain);
-
-        String errorMsg = ase.getMessage() == null ? "" : ase.getMessage();
         MyOauthException exception;
-
+        String errorMsg;
+        if (ase == null)
+            errorMsg = "服务异常";
+        else
+            errorMsg = ase.getMessage() == null ? "" : ase.getMessage();
         if (errorMsg.contains("密码") || errorMsg.contains("用户"))
             exception = MyOauthException.failure(401, errorMsg);
         else if (errorMsg.startsWith("Invalid access token")) {

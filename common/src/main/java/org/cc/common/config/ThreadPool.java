@@ -126,13 +126,11 @@ public class ThreadPool implements AsyncConfigurer {
                 object.addProperty("active", executor1.getActiveCount());
                 EventMessage<JsonObject> msg = new EventMessage<>(EventMessageType.THREAD_POOL_WATCH, object);
                 WSService.sendMessageToWatcher(msg);
-                long sleep = 1000 - (System.currentTimeMillis() - start);
-                if (sleep > 0) {
-                    try {
-                        PublicUtil.sleep(Long.valueOf(sleep).intValue());
-                    } catch (RuntimeException e) {
-                        break;
-                    }
+                try {
+                    PublicUtil.sleep(start, 1000L);
+                } catch (GlobalException e) {
+                    log.warn("退出线程池监控");
+                    break;
                 }
             }
         }
