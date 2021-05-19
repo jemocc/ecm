@@ -80,6 +80,26 @@ public class UserRoleAndPermissionDaoImpl implements UserRoleAndPermissionDao {
         return jdbcTemplate.query(sb.toString(), new BeanPropertyRowMapper<>(Role.class));
     }
 
+    @Override
+    public int insertPermission(Permission p) {
+        final String sql = "insert into permissions (pid, sort, name, type, desc, route, remark1) values (?,?,?,?,?,?,?)";
+        return DBUtil.insertRId(jdbcTemplate, sql, new Object[]{
+                p.getPid(), p.getSort(), p.getName(), p.getType(), p.getDesc(), p.getRoute(), p.getRemark1()
+        });
+    }
+
+    @Override
+    public int updatePermission(Permission p, boolean skipNull) {
+        final String sql = "update permissions set where id=?";
+        Map<String, Object> us = new HashMap<>();
+        us.put("sort", p.getSort());
+        us.put("name", p.getName());
+        us.put("desc", p.getDesc());
+        us.put("route", p.getRoute());
+        us.put("remark1", p.getRemark1());
+        return DBUtil.update(jdbcTemplate, sql, us, skipNull, new Object[]{ p.getId() });
+    }
+
 
     @Override
     public List<Permission> queryPermission(int permissionType) {

@@ -71,6 +71,15 @@ public class UserRoleAndPermissionServiceImpl implements UserRoleAndPermissionSe
     }
 
     @Override
+    public int savePermission(Permission p) {
+        if (p.getId() == -1) {  //新增
+            return userRoleAndPermissionDao.insertPermission(p);
+        } else {    //修改
+            return userRoleAndPermissionDao.updatePermission(p, false);
+        }
+    }
+
+    @Override
     public List<Permission> getPermissions(int userId, int permissionType) {
         //查询用户角色
         String roleIdsStr = "0,1";

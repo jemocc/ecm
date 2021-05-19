@@ -18,6 +18,8 @@ public interface UserRoleAndPermissionService {
 
     List<Role> queryRoles();
 
+    int savePermission(Permission p);
+
     List<Permission> getPermissions(int userId, int permissionType);
 
 }

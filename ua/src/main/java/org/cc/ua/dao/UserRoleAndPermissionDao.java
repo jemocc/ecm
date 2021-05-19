@@ -15,8 +15,10 @@ public interface UserRoleAndPermissionDao {
     List<Role> queryChildRoles(String pSeqNo);
     List<Role> queryAllChildRoles(List<String> pSeqNos);
 
-    List<Permission> queryPermission(int permissionType);
 
+    int insertPermission(Permission p);
+    int updatePermission(Permission p, boolean skipNull);
+    List<Permission> queryPermission(int permissionType);
     List<Permission> queryPermission(int permissionType, List<Integer> roles);
 
 

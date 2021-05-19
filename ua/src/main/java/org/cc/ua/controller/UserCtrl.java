@@ -37,6 +37,13 @@ public class UserCtrl {
         return RspResult.ok(r);
     }
 
+    @PostMapping("/save-permission")
+    public RspResult<Integer> savePermission(@RequestBody Permission p) {
+        log.info("save permission, with data: {}", JsonUtil.bean2Json(p));
+        int r = userRoleAndPermissionService.savePermission(p);
+        return RspResult.ok(r);
+    }
+
     @GetMapping("/get-roles")
     public RspResult<List<Role>> getRoles() {
         List<Role> roles = userRoleAndPermissionService.queryRoles();
