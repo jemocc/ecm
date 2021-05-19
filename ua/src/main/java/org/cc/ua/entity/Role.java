@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * @ClassName: Permission
@@ -43,4 +44,6 @@ public class Role implements Serializable {
     @ApiModelProperty("备注1")
     private String remark1;
 
+    @ApiModelProperty("子角色")
+    private List<Role> childRole;
 }

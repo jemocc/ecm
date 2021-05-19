@@ -1,5 +1,6 @@
 package org.cc.ua.dao.impl;
 
+import org.cc.common.component.DistributeSynchronized;
 import org.cc.common.utils.DBUtil;
 import org.cc.ua.dao.UserRoleAndPermissionDao;
 import org.cc.ua.entity.Permission;
@@ -8,7 +9,9 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @ClassName: UserRoleAndPermissionDaoImpl
@@ -26,35 +29,67 @@ public class UserRoleAndPermissionDaoImpl implements UserRoleAndPermissionDao {
     }
 
     @Override
+    @DistributeSynchronized("ADD_ROLE")
     public int insertRole(Role role) {
         final String sql = "insert into roles (pid, sort, seq_no, name, desc, status, remark1) values (?,?,?,?,?,?,?)";
-        final Object[] args = new Object[]{
+        return DBUtil.insertRId(jdbcTemplate, sql, new Object[]{
                 role.getPid(), role.getSeqNo(), role.getName(), role.getDesc(), role.getStatus(), role.getRemark1()
-        };
-        return DBUtil.insertRId(jdbcTemplate, sql, args);
+        });
+    }
+
+    @Override
+    public int updateRole(Role role, boolean skipNull) {
+        final String sql = "update roles set where id=?";
+        Map<String, Object> us = new HashMap<>();
+        us.put("sort", role.getSort());
+        us.put("name", role.getName());
+        us.put("desc", role.getDesc());
+        us.put("status", role.getStatus());
+        us.put("remark1", role.getRemark1());
+        return DBUtil.update(jdbcTemplate, sql, us, skipNull, new Object[]{ role.getId() });
     }
 
     @Override
     public Role queryRole(int id) {
-        String sql = "select * from roles where id = ?";
+        final String sql = "select * from roles where id = ?";
         return jdbcTemplate.queryForObject(sql, new Object[]{id}, new BeanPropertyRowMapper<>(Role.class));
     }
 
     @Override
     public List<Role> queryRoles(List<String> names) {
-        String sql = "select * from roles where name in ?";
+        final String sql = "select * from roles where name in ?";
         return jdbcTemplate.query(sql, new Object[]{names}, new BeanPropertyRowMapper<>(Role.class));
     }
 
     @Override
+    public List<Role> queryChildRoles(String pSeqNo) {
+        final String sql = "select * from roles where seq_no > ? and seq_no < ?";
+        Object[] args = new Object[]{pSeqNo, pSeqNo + "z0"};
+        return jdbcTemplate.query(sql, args, new BeanPropertyRowMapper<>(Role.class));
+    }
+
+    @Override
+    public List<Role> queryAllChildRoles(List<String> pSeqNos) {
+        StringBuilder sb = new StringBuilder("select * from roles where");
+        for (int i = 0; i < pSeqNos.size(); i++) {
+            String seqNo = pSeqNos.get(i);
+            char c = (char) (seqNo.charAt(seqNo.length() - 1) + 1);
+            sb.append(" (seq_no > '").append(seqNo).append("' and seq_no < '").append(seqNo.replaceAll(".$", "" + c)).append("') or");
+        }
+        sb.delete(sb.length() - 2, sb.length()).append("order by seq_no");
+        return jdbcTemplate.query(sb.toString(), new BeanPropertyRowMapper<>(Role.class));
+    }
+
+
+    @Override
     public List<Permission> queryPermission(int permissionType) {
-        String sql = "select * from permissions where type = ? order by sort";
+        final String sql = "select * from permissions where type = ? order by sort";
         return jdbcTemplate.query(sql, new Object[]{permissionType}, new BeanPropertyRowMapper<>(Permission.class));
     }
 
     @Override
     public List<Permission> queryPermission(int permissionType, List<Integer> roles) {
-        String sql = "select p.* from role_to_permission rtp left join permissions p on p.id = rtp.pid where type = ? and rtp.rid in ?";
+        final String sql = "select p.* from role_to_permission rtp left join permissions p on p.id = rtp.pid where type = ? and rtp.rid in ?";
         return jdbcTemplate.query(sql, new Object[]{permissionType, roles}, new BeanPropertyRowMapper<>(Permission.class));
     }
 }

@@ -8,14 +8,16 @@ import java.util.List;
 public interface UserRoleAndPermissionDao {
 
     int insertRole(Role role);
+    int updateRole(Role role, boolean skipNull);
 
     Role queryRole(int id);
     List<Role> queryRoles(List<String> names);
-
-
+    List<Role> queryChildRoles(String pSeqNo);
+    List<Role> queryAllChildRoles(List<String> pSeqNos);
 
     List<Permission> queryPermission(int permissionType);
 
     List<Permission> queryPermission(int permissionType, List<Integer> roles);
+
 
 }

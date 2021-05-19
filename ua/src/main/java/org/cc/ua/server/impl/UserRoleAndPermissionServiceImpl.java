@@ -1,5 +1,6 @@
 package org.cc.ua.server.impl;
 
+import org.cc.common.exception.GlobalException;
 import org.cc.common.model.User;
 import org.cc.common.utils.PlatformUtil;
 import org.cc.common.utils.PublicUtil;
@@ -8,11 +9,13 @@ import org.cc.ua.entity.Permission;
 import org.cc.ua.entity.Role;
 import org.cc.ua.exception.MissingOptPermission;
 import org.cc.ua.server.UserRoleAndPermissionService;
+import org.cc.ua.utils.Const;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @ClassName: userRoleAndPermissionServiceImpl
@@ -31,30 +34,40 @@ public class UserRoleAndPermissionServiceImpl implements UserRoleAndPermissionSe
         this.userRoleAndPermissionDao = userRoleAndPermissionDao;
     }
 
-
     @Override
     public int saveRole(Role r) {
         //检查是否有操作目标数据的权限
         User currentUser = PlatformUtil.currentUser();
-        List<Role> userRoles = userRoleAndPermissionDao.queryRoles(Arrays.asList(currentUser.getRoles().split(",")));
-        Role pRole = userRoleAndPermissionDao.queryRole(r.getPid());
-        long f = userRoles.stream().filter(i -> pRole.getSeqNo().contains(i.getSeqNo())).count();
-        if (f == 0)
-            throw new MissingOptPermission();
-        if (r.getId() == 0) {
-
+        List<String> userRoleNames = Arrays.asList(currentUser.getRoles().split(","));
+        if (r.getPid() == -1) {
+            if (!userRoleNames.contains("ROLE_ADMIN"))
+                throw new MissingOptPermission();
+            else {
+                r.setSeqNo(getNewSeqNo(""));
+                return userRoleAndPermissionDao.insertRole(r);
+            }
         } else {
-
+            List<Role> userRoles = userRoleAndPermissionDao.queryRoles(userRoleNames);
+            Role pRole = userRoleAndPermissionDao.queryRole(r.getPid());
+            long f = userRoles.stream().filter(i -> pRole.getSeqNo().contains(i.getSeqNo())).count();
+            if (f == 0)
+                throw new MissingOptPermission();
+            if (r.getId() == -1) {  //新增
+                r.setSeqNo(getNewSeqNo(pRole.getSeqNo()));
+                return userRoleAndPermissionDao.insertRole(r);
+            } else {    //修改
+                return userRoleAndPermissionDao.updateRole(r, false);
+            }
         }
-        return 0;
     }
 
     @Override
     public List<Role> queryRoles() {
         User user = PlatformUtil.currentUser();
         List<String> roleNames = Arrays.asList(user.getRoles().split(","));
-        List<Role> roles = userRoleAndPermissionDao.queryRoles(roleNames);
-        return null;
+        List<String> roleSeqNos = userRoleAndPermissionDao.queryRoles(roleNames).stream().map(Role::getSeqNo).collect(Collectors.toList());
+        List<Role> roles = userRoleAndPermissionDao.queryAllChildRoles(roleSeqNos);
+        return buildRoleTree(roles);
     }
 
     @Override
@@ -73,6 +86,17 @@ public class UserRoleAndPermissionServiceImpl implements UserRoleAndPermissionSe
         return buildPermissionTree(permissions);
     }
 
+    private String getNewSeqNo(String pSeqNo) {
+        List<String> seqNos = userRoleAndPermissionDao.queryChildRoles(pSeqNo).stream().map(Role::getSeqNo).collect(Collectors.toList());
+        if (seqNos.size() == Const.SORT_CHARS.length)
+            throw new GlobalException(501, "同级角色数量已达上限");
+        for (char c : Const.SORT_CHARS) {
+            if (!seqNos.contains(pSeqNo + c))
+                return pSeqNo + c;
+        }
+        return null;    //不会走到这里
+    }
+
     private List<Permission> buildPermissionTree(List<Permission> permissions) {
         if (permissions.size() == 0)
             return new ArrayList<>(0);
@@ -89,6 +113,28 @@ public class UserRoleAndPermissionServiceImpl implements UserRoleAndPermissionSe
                 tpp.getChildPermission().add(i);
             }
             permissionMap.put(i.getId(), i);
+        });
+        return result;
+    }
+
+    private List<Role> buildRoleTree(List<Role> roles) {
+        if (roles.size() == 0)
+            return new ArrayList<>(0);
+        List<Role> result = new ArrayList<>();
+        Map<Integer, Role> roleMap = new HashMap<>();
+        roles.forEach(i -> {
+            Role tr = roleMap.get(i.getPid());
+            if (tr == null) {
+                result.add(i);
+            } else {
+                List<Role> cr = tr.getChildRole();
+                if (cr == null) {
+                    cr = new ArrayList<>();
+                    tr.setChildRole(cr);
+                }
+                cr.add(i.getSort(), i);
+            }
+            roleMap.put(i.getId(), i);
         });
         return result;
     }

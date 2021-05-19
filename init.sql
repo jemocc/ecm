@@ -21,7 +21,7 @@ create table ua.`roles`(
     `status` int not null default 0 comment '角色状态 0-正常',
     `remark1` varchar(64) comment '备注1'
 ) COMMENT '平台角色表' ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-insert into ua.roles (pid, sort, seq_no, name, `desc`, remark1) values (-1, 0, 0, 'ROLE_ADMIN', '系统管理员', '系统内置，禁止删除'), (-1, 1, 1, 'ROLE_USER', '普通用户', '系统内置，禁止删除');
+insert into ua.roles (pid, sort, seq_no, name, `desc`, remark1) values (-1, 0, '0', 'ROLE_ADMIN', '系统管理员', '系统内置，禁止删除'), (-1, 1, '1', 'ROLE_USER', '普通用户', '系统内置，禁止删除');
 
 drop table if exists ua.permissions;
 create table ua.`permissions`(
